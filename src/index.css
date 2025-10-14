@@ -33,6 +33,7 @@ html {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
+  margin: 15px 0 15px 28px;
 }
 
 /* ---------- Typography ---------- */
@@ -469,4 +470,79 @@ form {
   to {
     opacity: 1;
   }
+}
+
+/* ---------- Landing Page ---------- */
+
+.landing-page-title {
+  font-size: 30px;
+  text-align: center;
+  margin-top: 30px;
+}
+
+.landing-page-image {
+  width: 100%;
+  height: auto;
+  border-radius: 30px;
+  display: block;
+}
+
+.landing-page-container {
+  text-align: center;
+}
+
+.gradient-frame {
+  display: inline-block; /* tilpasser sig billedets bredde */
+  padding: 4px; /* tykkelsen på “kanten” */
+  border-radius: 33px; /* yderste radius */
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+  width: 80%;
+}
+
+.landing-page-btns {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* afstand mellem knapperne */
+  margin-top: 20px;
+}
+
+.login-btn,
+.get-started-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  width: 145px;
+  height: 60px;
+}
+
+.login-btn {
+  border-radius: 12px;
+  padding: 1.5px 1.5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: 1px solid transparent; /* for at undgå forskydning ved hover */
+  background-image: linear-gradient(var(--black), var(--black)),
+    /* indre baggrund */ linear-gradient(to right, #ff86b4, #e99aff); /* kantens gradient */
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  transition: transform 0.2s ease;
+}
+
+.get-started-btn {
+  gap: 2px; /* afstand mellem tekst og ikon */
+  background: linear-gradient(180deg, #ff86b4 0%, #e99aff 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.arrow-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1); /* sikrer at pilen forbliver hvid, selv hvis SVG'en er sort */
+  transition: transform 0.2s ease;
 }
