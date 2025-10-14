@@ -398,7 +398,7 @@ a:hover {
   padding: 4px; /* tykkelsen på “kanten” */
   border-radius: 33px; /* yderste radius */
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
-  width: 80%;
+  width: 90%;
 }
 
 .landing-page-btns {
@@ -415,7 +415,7 @@ a:hover {
   justify-content: center;
   color: white;
   font-size: 14px;
-  width: 145px;
+  width: 160px;
   height: 60px;
 }
 
@@ -561,4 +561,12 @@ a:hover {
 
 .login-btn {
   gap: 5px;
+}
+
+.create-btn {
+  margin-top: 15px;
+}
+
+.google-btn {
+  margin-bottom: 40px;
 }
