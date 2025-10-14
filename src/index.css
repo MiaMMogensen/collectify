@@ -257,7 +257,8 @@ form {
   left: 50%;
   bottom: 45px; /* halv overlap under nav */
   transform: translateX(-50%);
-  width: 90%; /* lidt bredere end nav */
+  width: calc(100% - 40px);
+  max-width: 500px;
   border-radius: 30px;
   background: linear-gradient(180deg, #ff86b4 0%, #e99aff 100%);
   padding: 32px 10px; /* ingen indre “cards” */
