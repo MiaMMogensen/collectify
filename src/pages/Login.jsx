@@ -6,6 +6,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase-config";
+import Google from "../assets/icons/google.svg";
 
 export default function LogInd() {
   const [email, setEmail] = useState("");
@@ -66,7 +67,9 @@ export default function LogInd() {
       </p>
       <form className="login-form" onSubmit={handleLogin} noValidate>
         <div className="login-inputs">
-          <p>Email*</p>
+          <p>
+            Email <span className="gradient-text">*</span>
+          </p>
           <input
             type="email"
             placeholder="Enter your email"
@@ -74,7 +77,9 @@ export default function LogInd() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <p>Password*</p>
+          <p>
+            Password <span className="gradient-text">*</span>
+          </p>
           <input
             type="password"
             placeholder="Enter your password"
@@ -83,30 +88,24 @@ export default function LogInd() {
             required
           />
         </div>
-
+        <a href="#" onClick={handleForgot} className="forgot-link">
+          Forgot password?
+        </a>
         {error && <p className="login-error">{error}</p>}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Logger ind..." : "Log ind"}
+        <button className="get-started-btn" type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Log in"}
         </button>
 
         <button
           type="button"
-          className="google-login"
+          className="login-btn"
           onClick={handleGoogle}
           disabled={loading}
         >
-          <img
-            src="/assets/icons/google.svg"
-            alt="Google ikon"
-            className="google-icon"
-          />
           Log ind med Google
+          <img src={Google} alt="Google ikon" className="google-icon" />
         </button>
-
-        <a href="#" onClick={handleForgot} className="forgot-link">
-          Glemt adgangskode?
-        </a>
       </form>
     </div>
   );
