@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from "react-router";
-import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import Header from "./components/Header";
+import LandingPage from "./pages/LandingPage";
 
 export default function App() {
   return (
@@ -10,9 +10,10 @@ export default function App() {
       <Header />
       <main>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          {/* Tilføj login og signup sider*/}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
