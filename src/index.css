@@ -631,7 +631,6 @@ a:hover {
 .collection-btn.active {
   background: var(--gradient);
   color: white;
-  box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
   transform: scale(1.05);
 }
 

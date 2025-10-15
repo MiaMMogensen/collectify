@@ -1,25 +1,18 @@
 import { useState } from "react";
-import { useNavigate } from "react-router"; // Korrekt import
+import { useNavigate } from "react-router";
 import { ref as dbRef, push, update, serverTimestamp } from "firebase/database";
-import {
-  ref as storageRef,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
-import { auth, db, storage } from "../../firebase-config";
-import upload from "../assets/icons/uploadicon.svg";
+import { auth, db } from "../../firebase-config";
 
 export default function CreateCollection() {
   const [name, setName] = useState("");
   const [type, setType] = useState("books");
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(null);
+  const [coverUrl, setCoverUrl] = useState("");
+  const [imgOk, setImgOk] = useState(null); // null | true | false
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const navigate = useNavigate(); // Bruges senere til redirect (fjern hvis du ikke vil redirecte)
+  const navigate = useNavigate();
 
   const sanitize = (raw) =>
     String(raw || "")
@@ -36,16 +29,10 @@ export default function CreateCollection() {
     return null;
   }
 
-  function handleFileChange(e) {
-    const f = e.target.files?.[0] || null;
-    setFile(f);
-    if (f) {
-      const reader = new FileReader();
-      reader.onload = () => setPreview(reader.result);
-      reader.readAsDataURL(f);
-    } else {
-      setPreview(null);
-    }
+  function validateUrl(u) {
+    // enkel og stram: kræv https og filtype-indikator (jpg|jpeg|png|webp|gif|svg)
+    const re = /^https:\/\/.+\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i;
+    return re.test(u.trim());
   }
 
   async function handleSubmit(e) {
@@ -56,7 +43,14 @@ export default function CreateCollection() {
     const v = validateName(name);
     if (v) return setError(v);
 
-    if (!file) return setError("Vælg et coverbillede til collection.");
+    if (!validateUrl(coverUrl)) {
+      return setError(
+        "Indsæt en gyldig HTTPS billed-URL (jpg/png/webp/gif/svg)."
+      );
+    }
+    if (imgOk === false) {
+      return setError("Billedet kunne ikke indlæses. Tjek URL’en.");
+    }
 
     const user = auth.currentUser;
     if (!user || !user.uid) {
@@ -64,62 +58,39 @@ export default function CreateCollection() {
     }
 
     setLoading(true);
-
     try {
       const uid = user.uid;
       const collectionName = sanitize(name);
 
-      // Upload til storage
-      const storagePath = `users/${uid}/collections/${Date.now()}_${file.name}`;
-      const sRef = storageRef(storage, storagePath);
-      const uploadTask = uploadBytesResumable(sRef, file);
-
-      const downloadUrl = await new Promise((resolve, reject) => {
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            if (snapshot.totalBytes) {
-              const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(Math.round(p));
-            }
-          },
-          (err) => reject(err),
-          async () => {
-            const url = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(url);
-          }
-        );
-      });
-
-      // Opret collection med multipath update
+      // Opret collection-id
       const collectionsRef = dbRef(db, `users/${uid}/collections`);
       const newRef = push(collectionsRef);
       const collectionId = newRef.key;
-
       const now = serverTimestamp();
 
+      // Multipath update
       const updates = {};
       updates[`users/${uid}/collections/${collectionId}/id`] = collectionId;
       updates[`users/${uid}/collections/${collectionId}/title`] =
         collectionName;
       updates[`users/${uid}/collections/${collectionId}/type`] = type;
       updates[`users/${uid}/collections/${collectionId}/coverImage`] =
-        downloadUrl;
+        coverUrl.trim();
       updates[`users/${uid}/collections/${collectionId}/createdAt`] = now;
       updates[`users/${uid}/collections/${collectionId}/updatedAt`] = now;
 
+      // sørg for at de tomme grene eksisterer første gang
       updates[`users/${uid}/collections/_placeholder`] = true;
       updates[`users/${uid}/collectionItems/_placeholder`] = true;
 
-      await update(dbRef(db), updates); // dbRef(db) === root ref
+      await update(dbRef(db), updates);
 
       setSuccess("Collection oprettet!");
       setName("");
-      setFile(null);
-      setPreview(null);
-      setUploadProgress(null);
+      setCoverUrl("");
+      setImgOk(null);
 
-      // Redirect til collection (fjern linjen hvis I ikke skal redirecte)
+      // Redirect (tilpas stien til jeres routing)
       navigate(`/users/${uid}/collections/${collectionId}`);
     } catch (err) {
       console.error("CreateCollection error:", err);
@@ -157,6 +128,7 @@ export default function CreateCollection() {
             Albums
           </button>
         </div>
+
         <div className="login-inputs login-form collection-inputs">
           <p>Name collection</p>
           <input
@@ -168,44 +140,53 @@ export default function CreateCollection() {
             required
           />
 
-          <label className="cover-image-label">Add cover image</label>
-          <label htmlFor="fileUpload" className="file-upload-label">
-            <img
-              src={upload}
-              alt="image icon for upload"
-              className="upload-img"
-            />
+          <label className="cover-image-label">
+            Add cover image (paste URL)
           </label>
           <input
-            id="fileUpload"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="file-input-hidden"
+            type="url"
+            placeholder="https://example.com/cover.jpg"
+            value={coverUrl}
+            onChange={(e) => {
+              setCoverUrl(e.target.value);
+              setImgOk(null);
+            }}
+            onBlur={(e) => {
+              // simpel URL-kliktest: lad <img> afgøre ok/fejl
+              if (!validateUrl(e.target.value)) setImgOk(false);
+            }}
+            required
           />
 
-          {preview && (
+          {coverUrl ? (
             <div className="preview">
               <p>Preview:</p>
               <img
-                src={preview}
+                src={coverUrl}
                 alt="cover preview"
+                onLoad={() => setImgOk(true)}
+                onError={() => setImgOk(false)}
                 style={{ maxWidth: 240, borderRadius: 8 }}
               />
+              {imgOk === false && (
+                <small style={{ color: "salmon" }}>
+                  Billedet kunne ikke indlæses – tjek URL’en eller filendelsen.
+                </small>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
+
         <div>
           <button
             className="get-started-btn create-collection-btn"
             type="submit"
-            disabled={loading}
+            disabled={loading || imgOk === false}
           >
             {loading ? "Opretter..." : "Opret collection"}
           </button>
         </div>
 
-        {uploadProgress !== null && <div>Upload: {uploadProgress}%</div>}
         {error && <div style={{ color: "red" }}>{error}</div>}
         {success && <div style={{ color: "green" }}>{success}</div>}
       </form>
