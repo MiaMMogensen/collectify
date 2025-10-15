@@ -268,6 +268,6 @@ function mapFirebaseError(error) {
   if (code.includes("auth/invalid-email")) return "Invalid email address.";
   if (code.includes("auth/weak-password")) return "Your password is too weak.";
   if (code.includes("auth/popup-closed-by-user"))
-    return "Sign in was cancelled.";
+    return "Sign up was cancelled.";
   return "Something went wrong. Please try again.";
 }
