@@ -51,7 +51,7 @@ export default function LogInd() {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/");
+      navigate(`/`);
     } catch (err) {
       setError(mapFirebaseError(err));
     } finally {

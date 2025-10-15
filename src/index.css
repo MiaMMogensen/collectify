@@ -404,7 +404,7 @@ a:hover {
 .landing-page-btns {
   display: flex;
   justify-content: center;
-  gap: 10px; /* afstand mellem knapperne */
+  gap: 18px; /* afstand mellem knapperne */
   margin-top: 20px;
 }
 
@@ -651,7 +651,6 @@ a:hover {
   font-size: 20px;
   font-weight: 600;
   padding-left: 15px;
-  margin-bottom: 130px;
   line-height: 1.2;
 }
 
@@ -660,6 +659,7 @@ a:hover {
   justify-content: center;
   align-items: center;
   flex-grow: 1;
+  margin-top: 130px;
 }
 
 .plus-button {
