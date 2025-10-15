@@ -9,10 +9,10 @@ import {
 import {
   ref,
   runTransaction,
-  set,
   get,
   child,
   serverTimestamp,
+  update,
 } from "firebase/database";
 import { auth, db, googleProvider } from "../../firebase-config";
 import Google from "../assets/icons/google.svg";
@@ -43,31 +43,39 @@ export default function Signup() {
     return null;
   }
 
+  // Reserve username in the *new* index path
   async function reserveUsernameTx(usernameNorm, uid) {
-    const unameRef = ref(db, `usernames/${usernameNorm}`);
+    const unameRef = ref(db, `userIndex/usernames/${usernameNorm}`);
     const res = await runTransaction(unameRef, (current) => {
       if (current === null) return uid; // reserve if available
-      return; // conflict: no change
+      return; // conflict
     });
     return res.committed && res.snapshot.val() === uid;
   }
 
-  async function linkUidToUsername(uid, usernameNorm) {
-    await set(ref(db, `uidUsername/${uid}`), usernameNorm);
-  }
-
+  // Create /users/{uid} + empty branches with placeholders, and store username index
   async function createUserDoc(uid, { username, email }) {
-    await set(ref(db, `users/${uid}`), {
-      uid,
-      username,
-      email,
-      settings: {
-        language: "en",
-        theme: "system", // "light" | "dark" | "system"
-        privacy: "friends", // "public" | "friends" | "private"
-      },
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+    const now = serverTimestamp();
+
+    // use multipath update so empty branches actually exist
+    await update(ref(db), {
+      [`users/${uid}/uid`]: uid,
+      [`users/${uid}/username`]: username,
+      [`users/${uid}/email`]: email,
+      [`users/${uid}/settings/language`]: "en",
+      [`users/${uid}/settings/theme`]: "system",
+      [`users/${uid}/settings/privacy`]: "friends",
+      [`users/${uid}/createdAt`]: now,
+      [`users/${uid}/updatedAt`]: now,
+      // initialize empty trees with a placeholder key you can ignore in UI
+      [`users/${uid}/collections/_placeholder`]: true,
+      [`users/${uid}/collectionItems/_placeholder`]: true,
+      [`users/${uid}/categories/_placeholder`]: true,
+      [`users/${uid}/favorites/_placeholder`]: true,
+      [`users/${uid}/wishlist/_placeholder`]: true,
+      [`users/${uid}/friends/_placeholder`]: true,
+      // keep the single username index in sync
+      [`userIndex/usernames/${username}`]: uid,
     });
   }
 
@@ -82,11 +90,11 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // 1) Create auth user
+      // 1) create auth user
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), pw);
       const uid = cred.user.uid;
 
-      // 2) Reserve username atomically
+      // 2) reserve username (NEW path)
       const ok = await reserveUsernameTx(usernameNorm, uid);
       if (!ok) {
         try {
@@ -100,16 +108,14 @@ export default function Signup() {
         throw { code: "username-already-in-use" };
       }
 
-      // 3) Optional: put username in auth profile for convenience
+      // 3) reflect username on auth profile (optional)
       try {
         await updateProfile(auth.currentUser, { displayName: usernameNorm });
       } catch (updErr) {
         console.warn("Could not update displayName:", updErr);
       }
 
-      // 4) Reverse lookup (uid -> username)
-      await linkUidToUsername(uid, usernameNorm);
-
+      // 4) create user doc + placeholders + index entry
       await createUserDoc(uid, { username: usernameNorm, email: email.trim() });
 
       navigate("/");
@@ -129,9 +135,9 @@ export default function Signup() {
       const user = cred.user;
       const uid = user.uid;
 
-      // If this user doesn't have a username yet, generate + reserve one
-      const uidUserSnap = await get(child(ref(db), `uidUsername/${uid}`));
-      if (!uidUserSnap.exists()) {
+      // if the user has no username yet, generate + reserve one in the NEW index
+      const usersSnap = await get(child(ref(db), `users/${uid}/username`));
+      if (!usersSnap.exists()) {
         const base =
           sanitizeUsername(
             user.displayName || user.email?.split("@")[0] || "user"
@@ -147,16 +153,13 @@ export default function Signup() {
             candidate = `${base}${Math.floor(1000 + Math.random() * 9000)}`;
           }
         }
-
         if (!reserved) {
-          // Fallback: uid prefix to guarantee uniqueness
           candidate = uid.slice(0, 8);
           const finalOk = await reserveUsernameTx(candidate, uid);
-          if (!finalOk) {
+          if (!finalOk)
             throw new Error(
               "Could not reserve any username for this Google account."
             );
-          }
         }
 
         try {
@@ -165,21 +168,22 @@ export default function Signup() {
           console.warn("Could not update displayName:", updErr);
         }
 
-        await linkUidToUsername(uid, candidate);
         await createUserDoc(uid, {
           username: candidate,
           email: user.email || "",
         });
       } else {
-        // Ensure /users/{uid} exists (for old accounts that may be missing it)
-        const usersSnap = await get(child(ref(db), `users/${uid}`));
-        if (!usersSnap.exists()) {
-          const existingUsername = uidUserSnap.val();
-          await createUserDoc(uid, {
-            username: existingUsername,
-            email: user.email || "",
-          });
-        }
+        // user already has a username; ensure the index exists and user branches are initialized
+        const uname = usersSnap.val();
+        await update(ref(db), {
+          [`userIndex/usernames/${uname}`]: uid,
+          [`users/${uid}/collections/_placeholder`]: true,
+          [`users/${uid}/collectionItems/_placeholder`]: true,
+          [`users/${uid}/categories/_placeholder`]: true,
+          [`users/${uid}/favorites/_placeholder`]: true,
+          [`users/${uid}/wishlist/_placeholder`]: true,
+          [`users/${uid}/friends/_placeholder`]: true,
+        });
       }
 
       navigate("/");
