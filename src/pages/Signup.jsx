@@ -118,7 +118,7 @@ export default function Signup() {
       // 4) create user doc + placeholders + index entry
       await createUserDoc(uid, { username: usernameNorm, email: email.trim() });
 
-      navigate("/");
+      navigate("/after-signup");
     } catch (err) {
       console.error("Signup error:", err);
       setError(mapFirebaseError(err));
@@ -186,7 +186,7 @@ export default function Signup() {
         });
       }
 
-      navigate("/");
+      navigate("/after-signup");
     } catch (err) {
       console.error("Google signup error:", err);
       setError(mapFirebaseError(err));
