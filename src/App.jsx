@@ -9,8 +9,13 @@ import CreateCollection from "./pages/CreateCollection";
 import AfterSignUp from "./pages/AfterSignUp";
 import CollectionPage from "./pages/CollectionPage";
 import AddItem from "./pages/AddItem";
+import { useEffect } from "react";
+import { ensureAnonAuth } from "../firebase-config";
 
 export default function App() {
+  useEffect(() => {
+    ensureAnonAuth({ allowGuest: false }); // kræv rigtig bruger i jeres app
+  }, []);
   return (
     <>
       <Header />
