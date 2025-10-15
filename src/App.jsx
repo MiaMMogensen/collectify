@@ -8,6 +8,7 @@ import Signup from "./pages/Signup";
 import CreateCollection from "./pages/CreateCollection";
 import AfterSignUp from "./pages/AfterSignUp";
 import CollectionPage from "./pages/CollectionPage";
+import AddItem from "./pages/AddItem";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             path="/users/:uid/collections/:collectionId"
             element={<CollectionPage />}
           />
+          <Route path="/additem" element={<AddItem />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
