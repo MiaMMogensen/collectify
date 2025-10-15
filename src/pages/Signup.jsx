@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import {
   createUserWithEmailAndPassword,
@@ -14,7 +14,12 @@ import {
   serverTimestamp,
   update,
 } from "firebase/database";
-import { auth, db, googleProvider } from "../../firebase-config";
+import {
+  auth,
+  db,
+  googleProvider,
+  ensureAnonAuth,
+} from "../../firebase-config";
 import Google from "../assets/icons/google.svg";
 
 export default function Signup() {
@@ -23,6 +28,10 @@ export default function Signup() {
   const [pw, setPw] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    ensureAnonAuth({ allowGuest: true, timeoutMs: 2000 });
+  }, []);
 
   const navigate = useNavigate();
 

@@ -1,8 +1,13 @@
 import landingPage from "../assets/img/landingpage.png";
 import arrowIcon from "../assets/img/arrow.svg";
 import { Link } from "react-router";
+import { ensureAnonAuth } from "../../firebase-config";
+import { useEffect } from "react";
 
 export default function LandingPage() {
+  useEffect(() => {
+    ensureAnonAuth({ allowGuest: true, timeoutMs: 2000 });
+  }, []);
   return (
     <main>
       <h1 className="landing-page-title">Get Collectify-ing Today!</h1>
