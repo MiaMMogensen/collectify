@@ -420,7 +420,8 @@ a:hover {
 }
 
 .login-btn,
-.login-inputs input {
+.login-inputs input,
+.collection-btns button {
   border-radius: 12px;
   padding: 1px 1px;
   cursor: pointer;
@@ -569,4 +570,67 @@ a:hover {
 
 .google-btn {
   margin-bottom: 40px;
+}
+
+.page-title {
+  font-size: 35px;
+  margin-top: 41px;
+}
+
+.collection-btns {
+  display: flex;
+  gap: 35px;
+  margin: 25px 0;
+  justify-content: center;
+}
+
+.collection-btns button {
+  font-size: 15px;
+  color: var(--white);
+  width: 90px;
+  height: 90px;
+  border-radius: 20px;
+}
+
+.create-collection-btn {
+  margin-top: 35px;
+  width: 92%;
+  margin-left: 15px;
+}
+
+.cover-image-label {
+  margin-top: 15px;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.file-upload-label {
+  display: inline-block;
+  position: relative;
+  padding: 0.6rem 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  color: white;
+  background: linear-gradient(#353535, #353535) padding-box,
+    linear-gradient(180deg, #ff86b4 0%, #e99aff 100%) border-box;
+  border: 2px solid transparent;
+  height: 60px;
+  text-align: center;
+}
+
+.upload-img {
+  margin-top: 10px;
+}
+
+.collection-btn:hover {
+  opacity: 0.85;
+}
+
+.collection-btn.active {
+  background: var(--gradient);
+  color: white;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
+  transform: scale(1.05);
 }
