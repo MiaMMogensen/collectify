@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AfterSignUp from "./pages/AfterSignUp";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/after-signup" element={<AfterSignUp />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

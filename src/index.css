@@ -570,3 +570,51 @@ a:hover {
 .google-btn {
   margin-bottom: 40px;
 }
+
+.landing-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.landing-text {
+  text-align: left;
+  align-self: flex-start;
+  max-width: 500px;
+}
+
+.page-title {
+  font-size: 35px;
+  margin-top: 41px;
+}
+
+.aftersignup-subtitle {
+  font-size: 20px;
+  font-weight: 600;
+  padding-left: 15px;
+  margin-bottom: 130px;
+  line-height: 1.2;
+}
+
+.aftersignup-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.plus-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: var(--gradient);
+}
+
+.plus-icon {
+  width: 80px;
+  height: 80px;
+}
