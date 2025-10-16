@@ -652,6 +652,7 @@ a:hover {
   font-weight: 600;
   padding-left: 15px;
   line-height: 1.2;
+  width: 92%;
 }
 
 .aftersignup-btn-wrapper {
@@ -796,10 +797,8 @@ a:hover {
 }
 
 .collection-card {
-  border: 1px solid var(--glass-brd, rgba(255, 255, 255, 0.18));
   border-radius: 16px;
   padding: 10px;
-  backdrop-filter: blur(6px);
 }
 
 .cover-wrap {
@@ -949,4 +948,301 @@ a:hover {
 
 .submitted-subtitle {
   margin-top: 50px;
+}
+
+/* --- Horizontal strip i stedet for grid --- */
+.hscroll-strip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+  margin: 10px 0 10px 15px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* skjul scrollbar, men bevar scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* kortbredde – så de lægger sig som “cards” på række */
+.hscroll-strip .collection-card {
+  flex: 0 0 auto;
+  width: 120px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  scroll-snap-align: start;
+}
+
+.hscroll-strip .cover-frame {
+  padding: 2px; /* tykkelsen på “kanten” */
+  border-radius: 18px;
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+}
+
+/* Inner: styrer format og clipping */
+.hscroll-strip .cover-wrap {
+  aspect-ratio: 3 / 4; /* bog/album-format */
+  border-radius: 16px; /* 2px mindre end frame */
+  overflow: hidden; /* croppper billedet */
+  background: #2a2a2a;
+}
+
+/* Billedet: som block for at fjerne baseline-gap */
+.hscroll-strip .cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+/* titel/artist under cover */
+.hscroll-strip .item-title {
+  margin: 8px 2px 2px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hscroll-strip .item-sub {
+  margin: 0 2px;
+  font-size: 12px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aftersignup-subtitle-collection {
+  font-size: 30px;
+  font-weight: 600;
+  padding-left: 15px;
+  margin-bottom: -10px;
+  margin-top: 0px;
+}
+
+/* ---------- CATEGORY CARDS ---------- */
+.category-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 345px; /* bredde til hscroll */
+  height: 120px;
+  border-radius: 28px;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.category-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: brightness(0.75);
+}
+
+/* Titel som overlay i bunden */
+.category-title {
+  position: absolute;
+  left: 10px;
+  bottom: -5px;
+  padding: 12px 15px;
+  text-align: start;
+  font-weight: 500;
+  color: #fff;
+  background: var(--gradient);
+  border-radius: 20px;
+  font-size: 16px;
+}
+
+.categories-strip .cover-frame {
+  padding: 2px;
+  border-radius: 30px;
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+}
+
+/* ---------- CATEGORY GRID (fælles) ---------- */
+/* ---------- CategoryPage matcher AddItemsToCategoryPage ---------- */
+
+/* Samme grid (2 kolonner, spacing, padding) */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+  padding: 0 16px; /* pænere margin på mobil */
+  width: 100%;
+}
+
+/* Kortene i grid */
+.category-grid .collection-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+/* Samme coverramme med gradient */
+.category-grid .collection-card .cover-frame {
+  padding: 2px;
+  border-radius: 15px;
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+}
+
+/* Ens cover-dimensioner */
+.category-grid .cover-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 1 / 1; /* brug 3 / 4 hvis du vil have bogformat i stedet */
+  width: 100%;
+}
+
+.category-grid .cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Samme tekststil som add-items-siden */
+.category-grid .item-title {
+  margin: 8px 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.category-grid .item-sub {
+  margin: 2px 4px 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Titel + sideoverskrift skal have stort forbogstav */
+.category-title,
+.page-title {
+  text-transform: capitalize;
+}
+
+/* ---------- BACK ARROW ---------- */
+.back-arrow-link {
+  position: absolute;
+  left: 15px;
+  top: 60px;
+  transform: translateY(-8px);
+  padding: 6px;
+  text-decoration: none;
+}
+
+.back-arrow {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.2s ease;
+  display: block;
+}
+
+/* ---------- ADD ITEMS TO CATEGORY PAGE ---------- */
+.add-to-cat .collection-card.selectable {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+  color: var(--txt);
+  -webkit-tap-highlight-color: transparent;
+  margin: 0;
+}
+
+/* Tekstfarve */
+.add-to-cat .collection-card.selectable .item-title,
+.add-to-cat .collection-card.selectable .item-sub {
+  color: var(--txt);
+}
+
+/* Match coverrammen */
+.category-grid .collection-card .cover-frame,
+.add-to-cat .collection-card .cover-frame {
+  padding: 2px;
+  border-radius: 15px;
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+}
+
+.add-to-cat .collection-card .cover-frame {
+  background: transparent; /* ingen gradient som default */
+}
+
+/* Ens coverhøjde (kvadratisk format) */
+.category-grid .cover-wrap,
+.add-to-cat .collection-card .cover-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 1 / 1; /* ens højde/bredde som CategoryPage */
+  width: 100%;
+}
+
+.category-grid .cover,
+.add-to-cat .collection-card .cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Typografi */
+.category-grid .item-title,
+.add-to-cat .collection-card .item-title {
+  margin: 8px 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.category-grid .item-sub,
+.add-to-cat .collection-card .item-sub {
+  margin: 2px 4px 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Når valgt: gradientkant + let glow */
+.add-to-cat .collection-card.is-selected .cover-frame,
+.add-to-cat .cover-frame.selected {
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+}
+
+.add-to-cat .collection-card.is-selected {
+  transition: transform 0.15s ease;
+}
+
+/* ---------- Disabled items (allerede i category) ---------- */
+.add-to-cat .collection-card.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+
+.add-to-cat .collection-card.is-disabled .cover-frame {
+  background: none;
+}
+
+.add-to-cat .collection-card.is-disabled .item-title,
+.add-to-cat .collection-card.is-disabled .item-sub {
+  color: #888;
 }

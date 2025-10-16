@@ -83,6 +83,8 @@ export default function CreateCollection() {
       updates[`users/${uid}/collections/_placeholder`] = true;
       updates[`users/${uid}/collectionItems/_placeholder`] = true;
 
+      updates[`users/${uid}/collections/_placeholder`] = null;
+
       await update(dbRef(db), updates);
 
       setSuccess("Collection oprettet!");
