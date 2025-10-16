@@ -293,7 +293,7 @@ export default function CollectionPage() {
             </Link>
 
             <Link
-              to={addItemHref}
+              to="/additem"
               className="get-started-btn"
               aria-label="Add item"
             >
