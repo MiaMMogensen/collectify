@@ -950,3 +950,111 @@ a:hover {
 .submitted-subtitle {
   margin-top: 50px;
 }
+
+/* --- Horizontal strip i stedet for grid --- */
+.hscroll-strip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+  margin: 16px 0 15px 15px; /* matcher dit layout */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* skjul scrollbar, men bevar scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* kortbredde – så de lægger sig som “cards” på række */
+.hscroll-strip .collection-card {
+  flex: 0 0 auto;
+  width: 120px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  scroll-snap-align: start;
+}
+
+.hscroll-strip .cover-frame {
+  padding: 2px; /* tykkelsen på “kanten” */
+  border-radius: 18px;
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+}
+
+/* Inner: styrer format og clipping */
+.hscroll-strip .cover-wrap {
+  aspect-ratio: 3 / 4; /* bog/album-format */
+  border-radius: 16px; /* 2px mindre end frame */
+  overflow: hidden; /* croppper billedet */
+  background: #2a2a2a;
+}
+
+/* Billedet: som block for at fjerne baseline-gap */
+.hscroll-strip .cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+/* titel/artist under cover */
+.hscroll-strip .item-title {
+  margin: 8px 2px 2px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hscroll-strip .item-sub {
+  margin: 0 2px;
+  font-size: 12px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aftersignup-subtitle-collection {
+  font-size: 30px;
+  font-weight: 600;
+  padding-left: 15px;
+  margin-bottom: -10px;
+}
+
+/* ---------- Category Section ---------- */
+.categories-strip {
+  margin-bottom: 24px;
+}
+
+.category-card {
+  flex: 0 0 auto;
+  width: 180px;
+  background: #f5f5f5;
+  color: #000;
+  border-radius: 24px;
+  padding: 14px 20px;
+  text-align: center;
+  scroll-snap-align: start;
+}
+
+.category-cover {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 10px;
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  color: #000;
+}

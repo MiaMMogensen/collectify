@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-// src/pages/CollectionPage.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router";
 import { auth, db } from "../../firebase-config";
@@ -7,12 +5,29 @@ import { ref, child, get } from "firebase/database";
 import Nav from "../components/Nav";
 
 /* ---------- helpers ---------- */
-
 function normType(t) {
   const x = (t || "").toLowerCase();
   if (x === "books") return "book";
   if (x === "albums") return "album";
-  return x; // "book" | "album" | "vinyl" | ""
+  if (x === "vinyl") return "vinyl";
+  if (x === "book") return "book";
+  if (x === "album") return "album";
+  return x;
+}
+
+function pickImage(val) {
+  // håndter nested felter + et par almindelige aliaser
+  const candidates = [
+    val?.images?.cover,
+    val?.coverImage,
+    val?.imageUrl,
+    val?.image,
+    val?.thumbnail,
+  ];
+  let u = (candidates.find(Boolean) || "").trim();
+  // fjern evt. omgivende quotes
+  u = u.replace(/^["']|["']$/g, "");
+  return u;
 }
 
 async function loadItemsForCollection({ userRoot, collectionId, colType }) {
@@ -20,31 +35,30 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   const flatPath = `${userRoot}/collectionItems`;
   let list = [];
 
-  // 1) Nested: collectionItems/{collectionId}
+  // 1) Nested under collectionId
   try {
     const nestedSnap = await get(child(ref(db), nestedPath));
     if (nestedSnap.exists()) {
       const obj = nestedSnap.val() || {};
       for (const [key, val] of Object.entries(obj)) {
         if (key === "_placeholder") continue;
-        if (!val || typeof val !== "object") continue;
         list.push({
           id: key,
           title: val.title || val.name || "Untitled",
           author: val.author || val.artist || "",
           coverImage: val.coverImage || val.imageUrl || "",
           type: normType(val.type || colType),
-          collectionId: val.collectionId || collectionId,
+          collectionId,
           createdAt: Number(val.createdAt || 0),
           ...val,
         });
       }
     }
-  } catch (_err) {
-    // ignore nested read error
+  } catch (err) {
+    console.warn("⚠️ loadItemsForCollection (nested) error:", err);
   }
 
-  // 2) Fallback: flat collectionItems (filtrér på collectionId/type)
+  // 2) Fallback: flat user items
   if (list.length === 0) {
     try {
       const flatSnap = await get(child(ref(db), flatPath));
@@ -52,7 +66,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
         const obj = flatSnap.val() || {};
         for (const [key, val] of Object.entries(obj)) {
           if (key === "_placeholder") continue;
-          if (!val || typeof val !== "object") continue;
           const it = {
             id: key,
             title: val.title || val.name || "Untitled",
@@ -71,30 +84,110 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
           if (okById || okByType) list.push(it);
         }
       }
-    } catch (_err) {
-      // ignore flat read error
+    } catch (err) {
+      console.warn("⚠️ loadItemsForCollection (flat) error:", err);
     }
   }
 
-  // 3) Final type-filter
   const tf = normType(colType);
   if (tf) list = list.filter((it) => it.type === tf);
-
-  // 4) Sort newest first
   list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   return list;
 }
 
-/* ---------- component ---------- */
+async function loadCategories({ userRoot, collectionId }) {
+  const catPath = `${userRoot}/collections/${collectionId}/categories`;
+  const list = [];
+  try {
+    const snap = await get(child(ref(db), catPath));
+    if (snap.exists()) {
+      const obj = snap.val() || {};
+      for (const [key, val] of Object.entries(obj)) {
+        if (key === "_placeholder") continue;
+        if (!val || typeof val !== "object") continue;
+        list.push({
+          id: val.id || key,
+          title: val.title || "Untitled",
+          coverImage: val.coverImage || "",
+          createdAt: Number(val.createdAt || 0),
+          ...val,
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ loadCategories error:", err);
+  }
+  // nyeste først (valgfrit)
+  list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  return list;
+}
 
+async function loadDiscoverForType({ colType, userItemIdsSet }) {
+  const tf = normType(colType);
+  if (!tf) return [];
+
+  try {
+    const snap = await get(child(ref(db), "items")); // <- ingen leading slash
+    if (!snap.exists()) return [];
+
+    const obj = snap.val() || {};
+    const pool = [];
+    for (const [key, val] of Object.entries(obj)) {
+      if (!val || typeof val !== "object" || key === "_placeholder") continue;
+
+      // match kun samme type
+      const itemType = normType(val.type);
+      if (itemType !== tf) continue;
+
+      // skip ting brugeren har
+      if (userItemIdsSet.has(key)) continue;
+
+      const title = String(val.title || val.name || "").trim();
+      const author = String(val.author || val.artist || "").trim();
+
+      // undgå dubletter via "titel|forfatter" signatur
+      const sig = `${title.toLowerCase()}|${author.toLowerCase()}`;
+      if (userItemIdsSet.__sigs && userItemIdsSet.__sigs.has(sig)) continue;
+
+      pool.push({
+        id: val.id || key,
+        title: title || "Untitled",
+        author,
+        coverImage: pickImage(val), // <-- her!
+        type: itemType,
+        popularity: Number(val.popularity || 0),
+        createdAt: Number(val.createdAt || 0),
+        ...val,
+      });
+    }
+
+    // sortér: mest populære → nyeste → alfabetisk
+    pool.sort((a, b) => {
+      const p = (b.popularity || 0) - (a.popularity || 0);
+      if (p) return p;
+      const c = (b.createdAt || 0) - (a.createdAt || 0);
+      if (c) return c;
+      return (a.title || "").localeCompare(b.title || "");
+    });
+
+    return pool.slice(0, 7);
+  } catch (err) {
+    console.warn("⚠️ loadDiscoverForType(items) error:", err);
+    return [];
+  }
+}
+
+/* ---------- component ---------- */
 export default function CollectionPage() {
-  const { collectionId } = useParams(); // vi bruger den indloggede bruger til uid
+  const { collectionId } = useParams();
   const [col, setCol] = useState(null);
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [discover, setDiscover] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // search state (kun synlig når der er items)
+  // søgning
   const [q, setQ] = useState("");
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
@@ -108,13 +201,10 @@ export default function CollectionPage() {
       try {
         const me = auth.currentUser;
         if (!me) {
-          if (alive) {
-            setErr("You must be logged in.");
-            setLoading(false);
-          }
+          setErr("You must be logged in.");
+          setLoading(false);
           return;
         }
-
         const userRoot = `users/${me.uid}`;
 
         // 1) collection
@@ -122,30 +212,45 @@ export default function CollectionPage() {
           child(ref(db), `${userRoot}/collections/${collectionId}`)
         );
         if (!colSnap.exists()) {
-          if (alive) {
-            setErr("Collection not found.");
-            setLoading(false);
-          }
+          setErr("Collection not found.");
+          setLoading(false);
           return;
         }
-        const colData = colSnap.val();
+        const colData = colSnap.val() || {};
         const colType = normType(colData?.type);
 
-        // 2) items
+        // 2) items (i den aktuelle collection / type)
         const list = await loadItemsForCollection({
           userRoot,
           collectionId,
           colType,
         });
 
+        // 3) categories (under collectionen)
+        const cats = await loadCategories({ userRoot, collectionId });
+
+        // 4) discover (populære items af samme type, som brugeren ikke har)
+        const userItemIdsSet = new Set(list.map((x) => x.id));
+        userItemIdsSet.__sigs = new Set(
+          list.map(
+            (x) =>
+              `${(x.title || "").toLowerCase()}|${(
+                x.author || ""
+              ).toLowerCase()}`
+          )
+        );
+        const dis = await loadDiscoverForType({ colType, userItemIdsSet });
+
         if (!alive) return;
         setCol(colData);
         setItems(list);
+        setCategories(cats);
+        setDiscover(dis);
         setLoading(false);
-      } catch (_err) {
+      } catch (e) {
         if (!alive) return;
-        console.error(_err);
-        setErr(_err?.message || "Could not load collection.");
+        console.error(e);
+        setErr("Could not load collection.");
         setLoading(false);
       }
     }
@@ -154,16 +259,13 @@ export default function CollectionPage() {
     return () => {
       alive = false;
       if (debounceRef.current) {
-        try {
-          clearTimeout(debounceRef.current);
-        } catch {
-          // ignore
-        }
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
       }
     };
-  }, [collectionId]);
+    // <-- vigtig: ingen ekstra } eller ) efter denne linje!
+  }, [collectionId]); // <-- slut på useEffect
 
-  // debounced søgning i den nuværende items-liste
   const visibleItems = useMemo(() => {
     const term = (q || "").trim().toLowerCase();
     if (!term) return items;
@@ -189,7 +291,6 @@ export default function CollectionPage() {
       </main>
     );
   }
-
   if (err) {
     return (
       <main className="landing-container">
@@ -198,8 +299,6 @@ export default function CollectionPage() {
     );
   }
 
-  const total = items.length;
-  const count = visibleItems.length;
   const typeLabel =
     (col?.type === "books" && "Books") ||
     (col?.type === "albums" && "Albums") ||
@@ -212,17 +311,16 @@ export default function CollectionPage() {
     ? `/users/${meUid}/collections/${collectionId}/add-item`
     : "#";
   const addCategoryHref = meUid
-    ? `/users/${meUid}/collections/${collectionId}/add-category`
+    ? `/users/${meUid}/collections/${collectionId}/createcategory`
     : "#";
 
   return (
-    <main className="landing-container">
+    <main className="landing-container" style={{ paddingBottom: 130 }}>
       <div className="landing-text">
         <h1 className="page-title">{col?.title || "Untitled collection"}</h1>
       </div>
 
-      {/* Empty state: kun én knap + tekst */}
-      {total === 0 ? (
+      {items.length === 0 ? (
         <div>
           <h3 className="aftersignup-subtitle">
             This {(typeLabel || "collection").toLowerCase()} is empty. Add your
@@ -231,13 +329,13 @@ export default function CollectionPage() {
           <Link
             to={addItemHref}
             className="get-started-btn create-collection-btn"
-            aria-label="Add items"
           >
             Add items +
           </Link>
         </div>
       ) : (
         <>
+          {/* Search */}
           <div className="search-container">
             <input
               type="search"
@@ -247,24 +345,46 @@ export default function CollectionPage() {
               aria-label="Search items"
             />
             {searching && <span className="search-hint">Searching…</span>}
-            {q && !searching && (
-              <span className="search-hint">
-                Showing {count}/{total}
-              </span>
-            )}
           </div>
-          {/* Når der er items: ekstra knap + søgning */}
 
-          {count === 0 ? (
-            <p className="aftersignup-subtitle">No items match your search.</p>
-          ) : (
-            <div className="collection-grid">
-              {visibleItems.map((it) => (
-                <article
-                  key={it.id}
-                  className="collection-card"
-                  aria-label={it.title}
-                >
+          {/* ---------- CATEGORIES (øverst) ---------- */}
+          {categories.length > 0 && (
+            <>
+              <h3 className="aftersignup-subtitle-collection">Categories</h3>
+              <div className="hscroll-strip no-scrollbar categories-strip">
+                {categories.map((cat) => (
+                  <article
+                    key={cat.id}
+                    className="category-card"
+                    aria-label={cat.title}
+                  >
+                    {cat.coverImage && (
+                      <img
+                        src={cat.coverImage}
+                        alt={cat.title}
+                        className="category-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    <h3 className="category-title">{cat.title}</h3>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ---------- ALL [TYPE] ---------- */}
+          <h3 className="aftersignup-subtitle-collection">
+            All {typeLabel.toLowerCase()}
+          </h3>
+          <div className="hscroll-strip no-scrollbar">
+            {visibleItems.map((it) => (
+              <article
+                key={it.id}
+                className="collection-card"
+                aria-label={it.title}
+              >
+                <div className="cover-frame">
                   <div className="cover-wrap">
                     {it.coverImage ? (
                       <img
@@ -277,12 +397,47 @@ export default function CollectionPage() {
                       <div className="cover placeholder" />
                     )}
                   </div>
-                  <h3 className="item-title">{it.title}</h3>
-                  {it.author ? <p className="item-sub">{it.author}</p> : null}
-                </article>
-              ))}
-            </div>
+                </div>
+                <h3 className="item-title">{it.title}</h3>
+                {it.author ? <p className="item-sub">{it.author}</p> : null}
+              </article>
+            ))}
+          </div>
+
+          {/* ---------- DISCOVER ---------- */}
+          {discover.length > 0 && (
+            <>
+              <h3 className="aftersignup-subtitle-collection">Discover</h3>
+              <div className="hscroll-strip no-scrollbar">
+                {discover.map((it) => (
+                  <article
+                    key={it.id}
+                    className="collection-card"
+                    aria-label={it.title}
+                  >
+                    <div className="cover-frame">
+                      <div className="cover-wrap">
+                        {it.coverImage ? (
+                          <img
+                            src={it.coverImage}
+                            alt={it.title}
+                            className="cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="cover placeholder" />
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="item-title">{it.title}</h3>
+                    {it.author ? <p className="item-sub">{it.author}</p> : null}
+                  </article>
+                ))}
+              </div>
+            </>
           )}
+
+          {/* ---------- CTA buttons ---------- */}
           <div className="landing-page-btns">
             <Link
               to={addCategoryHref}
@@ -291,9 +446,8 @@ export default function CollectionPage() {
             >
               Add category +
             </Link>
-
             <Link
-              to="/additem"
+              to={addItemHref}
               className="get-started-btn"
               aria-label="Add item"
             >
