@@ -96,7 +96,7 @@ export default function SubmitPage() {
       setType("book");
 
       // lille pause før redirect, så brugeren ser succes-beskeden
-      setTimeout(() => navigate("/collections"), 900);
+      setTimeout(() => navigate("/submitsuccess"), 900);
     } catch (err) {
       console.error("SubmitItem error:", err);
 

@@ -928,3 +928,25 @@ a:hover {
   font-size: 0.9rem;
   color: #333;
 }
+
+.submitted-btns-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 50px;
+}
+
+.submitted-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  width: 92%;
+  align-items: center;
+  justify-content: center;
+}
+
+.submitted-subtitle {
+  margin-top: 50px;
+}

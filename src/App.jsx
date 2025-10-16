@@ -11,6 +11,7 @@ import CollectionPage from "./pages/CollectionPage";
 import AddItem from "./pages/AddItem";
 import SubmitPage from "./pages/SubmitPage";
 import AdminPendingItems from "./pages/AdminPendingItems";
+import SubmitSuccess from "./pages/SubmitSuccess";
 import { useEffect } from "react";
 import { ensureAnonAuth } from "../firebase-config";
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/additem" element={<AddItem />} />
           <Route path="/submit" element={<SubmitPage />} />
           <Route path="/admin" element={<AdminPendingItems />} />
+          <Route path="/submitsuccess" element={<SubmitSuccess />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
