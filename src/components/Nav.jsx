@@ -14,7 +14,11 @@ export default function Nav() {
 
   const links = [
     { to: "/", icon: home, label: "Hjem" },
-    { to: "/collections", icon: collections, label: "Samlinger" },
+    {
+      to: "/users/:uid/collections/:collectionId",
+      icon: collections,
+      label: "Samlinger",
+    },
     { to: "/add", icon: addItem, label: "Tilføj", isAdd: true },
     { to: "/favourites", icon: favourites, label: "Favoritter" },
     { to: "/profile", icon: profile, label: "Profil" },
