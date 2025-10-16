@@ -825,3 +825,106 @@ a:hover {
   margin: 0;
   font-size: 0.9rem;
 }
+
+.empty {
+  color: #666;
+  padding: 12px 0;
+}
+
+/* Liste */
+.pending-list {
+  list-style: none;
+  padding: 0;
+  margin: 15px;
+  display: grid;
+  gap: 15px;
+}
+
+/* Item */
+.pending-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.item-main-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-type,
+.item-meta,
+.item-link {
+  color: var(--black);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.expand-btn-wrap {
+  margin-top: 8px;
+}
+
+.item-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: var(--black);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-approve {
+  background: #61ff8e;
+}
+
+.btn-reject {
+  background: #ff6464;
+}
+
+.admin-edit-section {
+  margin-top: 15px;
+  background: #fafafa;
+  color: var(--black);
+  font-size: 14px;
+}
+
+.admin-label {
+  display: block;
+  margin-bottom: 6px;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+.admin-textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.admin-input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+}
+
+.selected-file {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #333;
+}

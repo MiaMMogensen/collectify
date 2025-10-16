@@ -136,10 +136,10 @@ export default function AddItem() {
       updates[`users/${uid}/collectionItems/_placeholder`] = true;
 
       await update(dbRef(db), updates);
-      setSuccessMsg("Item tilføjet!");
+      setSuccessMsg("Item added!");
     } catch (err) {
       console.error("Add item error:", err);
-      setError(err?.message || "Kunne ikke tilføje item.");
+      setError(err?.message || "Couldn't add item.");
     } finally {
       setAddingId(null);
     }

@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   ref as dbRef,
   onValue,
-  update,
   serverTimestamp,
   get,
   set,
@@ -12,9 +11,21 @@ import { db, auth } from "../../firebase-config";
 
 const VALID_TYPES = ["book", "album", "vinyl"];
 
+function isValidHttpsUrl(str) {
+  try {
+    const u = new URL(String(str || "").trim());
+    return u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function AdminPendingItems() {
   const [pendingItems, setPendingItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
+  // formState: { [itemId]: { description, tagsText, coverUrl } }
+  const [formState, setFormState] = useState({});
 
   // Hent alle pending items
   useEffect(() => {
@@ -22,7 +33,7 @@ export default function AdminPendingItems() {
     const unsubscribe = onValue(pendingRef, (snapshot) => {
       const data = snapshot.val() || {};
       const arr = Object.entries(data)
-        .filter(([, val]) => val && VALID_TYPES.includes(val.type)) // filtrer _placeholder
+        .filter(([, val]) => val && VALID_TYPES.includes(val.type))
         .map(([key, val]) => ({ ...val, id: key }));
       setPendingItems(arr);
     });
@@ -32,133 +43,265 @@ export default function AdminPendingItems() {
     };
   }, []);
 
-  // DEBUG: tjek om user er admin
+  // DEBUG: tjek om user er admin (valgfri)
   useEffect(() => {
     (async () => {
       const user = auth.currentUser;
-      if (!user) return console.warn("Ikke logget ind");
-      const snap = await get(dbRef(db, `admins/${user.uid}`));
-      console.log(
-        "DEBUG: admins/<uid> value:",
-        snap.exists() ? snap.val() : null
-      );
+      if (!user) return console.warn("Not logged in");
+      try {
+        const snap = await get(dbRef(db, `admins/${user.uid}`));
+        console.log(
+          "DEBUG: admins/<uid> value:",
+          snap.exists() ? snap.val() : null
+        );
+      } catch (err) {
+        console.error("Failed to fetch admin flag:", err);
+      }
     })();
   }, []);
 
+  // Helper: opdater lokal formState for et item
+  const setField = (itemId, field, value) => {
+    setFormState((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...(prev[itemId] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  // Approve: skriv item med ekstra felter til brugerens collection og slet pending
   const approveItem = async (item) => {
-    if (!item?.id) return alert("Item mangler ID!");
+    if (!item?.id) return alert("Item is missing an ID!");
     if (!VALID_TYPES.includes(item.type)) {
-      return alert("Kan ikke approve items i placeholder collection");
+      return alert("Couldn't approve items in placeholder collection");
     }
 
-    setLoadingItems((prev) => ({ ...prev, [item.id]: true }));
+    const itemId = item.id;
+    setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
 
     try {
-      const itemPath = `users/${item.createdBy}/collections/${item.type}/items/${item.id}`;
-      // 1️⃣ skriv item til brugerens collection
-      await set(dbRef(db, itemPath), {
+      // Hent admin-udfyldte værdier (kan være undefined)
+      const local = formState[itemId] || {};
+      const description = (local.description || "").trim();
+      const tagsText = (local.tagsText || "").trim();
+      const tags = tagsText
+        ? tagsText
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+
+      // Cover image: brug admin-supplied URL hvis gyldig, ellers brug eksisterende item.coverImage eller tom string
+      let coverUrl = "";
+      if (local.coverUrl && local.coverUrl.trim() !== "") {
+        if (!isValidHttpsUrl(local.coverUrl)) {
+          throw new Error("Cover image URL skal være en gyldig https:// URL");
+        }
+        coverUrl = local.coverUrl.trim();
+      } else if (item.coverImage) {
+        coverUrl = item.coverImage;
+      }
+
+      const now = serverTimestamp();
+
+      // skriv item til brugerens collection
+      const userItemPath = `users/${item.createdBy}/collections/${item.type}/items/${itemId}`;
+      const userItemData = {
         ...item,
+        description: description || "",
+        coverImage: coverUrl || "",
+        tags: tags,
         status: "approved",
-        approvedAt: serverTimestamp(),
+        approvedAt: now,
+        updatedAt: now,
+        approvedBy: auth?.currentUser?.uid || null,
+      };
+      await set(dbRef(db, userItemPath), userItemData);
+
+      // --- skriv fladt globalt item så din search komponent finder det ---
+      const flatGlobalPath = `items/${itemId}`;
+      const existingGlobalSnap = await get(dbRef(db, flatGlobalPath));
+
+      const flatGlobalData = {
+        author: (item.author || "").trim(),
+        title: (item.title || "").trim(),
+        description: description || "",
+        type: item.type,
+        images: {
+          cover: coverUrl || item.coverImage || "" || "",
+        },
+        external: {
+          link: (item.link || "").trim(),
+        },
+        tags: tags,
+        createdBy: item.createdBy || null,
+        approvedBy: auth?.currentUser?.uid || null,
+        status: "approved",
+        createdAt:
+          existingGlobalSnap && existingGlobalSnap.exists()
+            ? existingGlobalSnap.val().createdAt || now
+            : now,
+        updatedAt: now,
+      };
+
+      await set(dbRef(db, flatGlobalPath), flatGlobalData);
+
+      // slet fra pendingItems
+      await set(dbRef(db, `pendingItems/${itemId}`), null);
+
+      // opdatér lokal UI
+      setPendingItems((prev) => prev.filter((it) => it.id !== itemId));
+      setFormState((prev) => {
+        const copy = { ...prev };
+        delete copy[itemId];
+        return copy;
       });
 
-      // 2️⃣ slet fra pendingItems
-      await set(dbRef(db, `pendingItems/${item.id}`), null);
-
-      // 3️⃣ fjern fra lokal liste
-      setPendingItems((prev) => prev.filter((it) => it.id !== item.id));
-
-      alert(`Item "${item.title}" godkendt!`);
+      alert(`Item "${item.title}" approved!`);
     } catch (err) {
       console.error("Approve error:", err);
       alert(
-        "Noget gik galt ved godkendelsen. Tjek database-regler og admin-adgang."
+        "Noget gik galt ved godkendelsen. Tjek database-rules og admin-access. Fejl: " +
+          (err?.message || err)
       );
     } finally {
-      setLoadingItems((prev) => ({ ...prev, [item.id]: false }));
+      setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
   const rejectItem = async (item) => {
-    if (!item?.id) return alert("Item mangler ID!");
-    setLoadingItems((prev) => ({ ...prev, [item.id]: true }));
+    if (!item?.id) return alert("Item is missing an ID!");
+    const itemId = item.id;
+    setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
 
     try {
-      await update(dbRef(db, `pendingItems/${item.id}`), null);
-      setPendingItems((prev) => prev.filter((it) => it.id !== item.id));
-      alert(`Item "${item.title}" afvist!`);
+      await set(dbRef(db, `pendingItems/${itemId}`), null);
+      setPendingItems((prev) => prev.filter((it) => it.id !== itemId));
+      alert(`Item "${item.title}" rejected!`);
     } catch (err) {
       console.error("Reject error:", err);
       alert(
-        "Noget gik galt ved afvisningen. Tjek database-regler og admin-adgang."
+        "Noget gik galt ved afvisningen. Tjek database-rules og admin-access."
       );
     } finally {
-      setLoadingItems((prev) => ({ ...prev, [item.id]: false }));
+      setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Pending Items for Approval</h1>
-      {pendingItems.length === 0 && <p>No items pending approval.</p>}
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {pendingItems.map((item) => (
-          <li
-            key={item.id || item.title}
-            style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              marginBottom: "15px",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "15px",
-            }}
-          >
-            <div>
-              <strong>{item.title}</strong> ({item.type}) <br />
-              by {item.author} <br />
-              <a href={item.link} target="_blank" rel="noopener noreferrer">
-                View Link
-              </a>
-            </div>
+    <div className="admin-page">
+      <h1 className="page-title">Pending Items for Approval</h1>
 
-            <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
-              <button
-                style={{
-                  background: "green",
-                  color: "white",
-                  padding: "5px 10px",
-                  border: "none",
-                  borderRadius: "5px",
-                  opacity: loadingItems[item.id] ? 0.6 : 1,
-                  cursor: loadingItems[item.id] ? "not-allowed" : "pointer",
-                }}
-                onClick={() => approveItem(item)}
-                disabled={loadingItems[item.id]}
-              >
-                {loadingItems[item.id] ? "Processing..." : "Approve"}
-              </button>
+      {pendingItems.length === 0 ? (
+        <p className="empty">No items pending approval.</p>
+      ) : (
+        <ul className="pending-list">
+          {pendingItems.map((item) => {
+            const itemId = item.id;
+            const local = formState[itemId] || {};
+            return (
+              <li key={itemId || item.title} className="pending-item">
+                <div className="item-info">
+                  <div className="item-main-row">
+                    <strong className="item-title">{item.title}</strong>
+                    <span className="item-type">({item.type})</span>
+                  </div>
 
-              <button
-                style={{
-                  background: "red",
-                  color: "white",
-                  padding: "5px 10px",
-                  border: "none",
-                  borderRadius: "5px",
-                  opacity: loadingItems[item.id] ? 0.6 : 1,
-                  cursor: loadingItems[item.id] ? "not-allowed" : "pointer",
-                }}
-                onClick={() => rejectItem(item)}
-                disabled={loadingItems[item.id]}
-              >
-                {loadingItems[item.id] ? "Processing..." : "Reject"}
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+                  <div className="item-meta">
+                    by <span className="item-author">{item.author}</span>
+                  </div>
+
+                  <div className="item-link">
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Link
+                    </a>
+                  </div>
+
+                  <div className="expand-btn-wrap">
+                    <button
+                      className="btn expand-btn"
+                      onClick={() =>
+                        setExpandedId((prev) =>
+                          prev === itemId ? null : itemId
+                        )
+                      }
+                    >
+                      {expandedId === itemId
+                        ? "Close details / hide admin fields"
+                        : "Open details / show admin fields"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="item-actions">
+                  <button
+                    className="btn btn-approve"
+                    onClick={() => approveItem(item)}
+                    disabled={loadingItems[itemId]}
+                  >
+                    {loadingItems[itemId] ? "Processing..." : "Approve"}
+                  </button>
+
+                  <button
+                    className="btn btn-reject"
+                    onClick={() => rejectItem(item)}
+                    disabled={loadingItems[itemId]}
+                  >
+                    {loadingItems[itemId] ? "Processing..." : "Reject"}
+                  </button>
+                </div>
+
+                {expandedId === itemId && (
+                  <div className="admin-edit-section">
+                    <label className="admin-label">Description</label>
+                    <textarea
+                      className="admin-textarea"
+                      rows={4}
+                      value={local.description || ""}
+                      onChange={(e) =>
+                        setField(itemId, "description", e.target.value)
+                      }
+                      placeholder="Write a short description."
+                    />
+
+                    <label className="admin-label">
+                      Tags (comma separated)
+                    </label>
+                    <input
+                      className="admin-input"
+                      type="text"
+                      value={local.tagsText || ""}
+                      onChange={(e) =>
+                        setField(itemId, "tagsText", e.target.value)
+                      }
+                      placeholder="ex. romance, mystery, fantasy"
+                    />
+
+                    <label className="admin-label">
+                      Cover image URL (https)
+                    </label>
+                    <input
+                      className="admin-input"
+                      type="url"
+                      value={local.coverUrl || ""}
+                      onChange={(e) =>
+                        setField(itemId, "coverUrl", e.target.value)
+                      }
+                      placeholder="https://example.com/cover.jpg"
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
