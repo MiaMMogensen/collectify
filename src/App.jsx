@@ -14,6 +14,8 @@ import { useEffect } from "react";
 import { ensureAnonAuth } from "../firebase-config";
 import AddCategory from "./pages/CreateCategory";
 import ScrollToTop from "./pages/ScrollToTop";
+import CategoryPage from "./pages/CategoryPage";
+import AddItemsToCategoryPage from "./pages/AddItemsToCategoryPage";
 
 export default function App() {
   useEffect(() => {
@@ -37,6 +39,14 @@ export default function App() {
           <Route
             path="/users/:uid/collections/:collectionId/createcategory"
             element={<AddCategory />}
+          />
+          <Route
+            path="/users/:uid/collections/:collectionId/categories/:categoryId"
+            element={<CategoryPage />}
+          />
+          <Route
+            path="/users/:uid/collections/:collectionId/categories/:categoryId/add-items"
+            element={<AddItemsToCategoryPage />}
           />
           <Route path="/additem" element={<AddItem />} />
           <Route path="/submit" element={<SubmitPage />} />

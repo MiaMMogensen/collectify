@@ -34,65 +34,92 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   const nestedPath = `${userRoot}/collectionItems/${collectionId}`;
   const flatPath = `${userRoot}/collectionItems`;
   let list = [];
+  let mode = "flat"; // hvis du vil gemme den
 
-  // 1) Nested under collectionId
+  const getCover = (val) => {
+    const candidates = [
+      val?.images?.cover,
+      val?.coverImage,
+      val?.imageUrl,
+      val?.image,
+      val?.thumbnail,
+    ];
+    let u = (
+      candidates.find((x) => typeof x === "string" && x.trim()) || ""
+    ).trim();
+    return u.replace(/^["']|["']$/g, "");
+  };
+
+  // 1) PRØV NESTED FØRST, men IGNORÉR tomme noder
   try {
-    const nestedSnap = await get(child(ref(db), nestedPath));
-    if (nestedSnap.exists()) {
-      const obj = nestedSnap.val() || {};
+    const snap = await get(child(ref(db), nestedPath));
+    if (snap.exists()) {
+      const obj = snap.val() || {};
       for (const [key, val] of Object.entries(obj)) {
-        if (key === "_placeholder") continue;
+        if (!val || typeof val !== "object" || key === "_placeholder") continue;
+
+        const title = String(val.title || val.name || "").trim();
+        const cover = getCover(val);
+        // Skip “spøgelsesnoder” som kun indeholder kategori-felter
+        if (!title && !cover) continue;
+
         list.push({
           id: key,
-          title: val.title || val.name || "Untitled",
+          title: title || "Untitled",
           author: val.author || val.artist || "",
-          coverImage: val.coverImage || val.imageUrl || "",
+          coverImage: cover,
           type: normType(val.type || colType),
           collectionId,
           createdAt: Number(val.createdAt || 0),
           ...val,
         });
       }
+      if (list.length > 0) mode = "nested";
     }
   } catch (err) {
-    console.warn("⚠️ loadItemsForCollection (nested) error:", err);
+    console.warn("loadItemsForCollection (nested) error:", err);
   }
 
-  // 2) Fallback: flat user items
-  if (list.length === 0) {
+  // 2) Fallback til FLAT hvis nested ikke gav rigtige items
+  if (mode !== "nested") {
+    list = [];
     try {
-      const flatSnap = await get(child(ref(db), flatPath));
-      if (flatSnap.exists()) {
-        const obj = flatSnap.val() || {};
+      const snap = await get(child(ref(db), flatPath));
+      if (snap.exists()) {
+        const obj = snap.val() || {};
         for (const [key, val] of Object.entries(obj)) {
-          if (key === "_placeholder") continue;
-          const it = {
+          if (!val || typeof val !== "object" || key === "_placeholder")
+            continue;
+          const title = String(val.title || val.name || "").trim();
+          const cover = getCover(val);
+          if (!title && !cover) continue;
+
+          list.push({
             id: key,
-            title: val.title || val.name || "Untitled",
+            title: title || "Untitled",
             author: val.author || val.artist || "",
-            coverImage: val.coverImage || val.imageUrl || "",
+            coverImage: cover,
             type: normType(val.type || colType),
             collectionId: val.collectionId,
             createdAt: Number(val.createdAt || 0),
             ...val,
-          };
-          const wantType = normType(colType);
-          const okById = it.collectionId
-            ? it.collectionId === collectionId
-            : false;
-          const okByType = wantType ? it.type === wantType : true;
-          if (okById || okByType) list.push(it);
+          });
         }
+        mode = "flat";
       }
     } catch (err) {
-      console.warn("⚠️ loadItemsForCollection (flat) error:", err);
+      console.warn("loadItemsForCollection (flat) error:", err);
     }
   }
 
+  // eventuelt filter på type
   const tf = normType(colType);
   if (tf) list = list.filter((it) => it.type === tf);
+
+  // nyeste først
   list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  return list;
+
+  return list; // hvis du vil bruge mode, returnér { list, mode }
 }
 
 async function loadCategories({ userRoot, collectionId }) {
@@ -349,15 +376,15 @@ export default function CollectionPage() {
 
           {/* ---------- CATEGORIES (øverst) ---------- */}
           {categories.length > 0 && (
-            <>
-              <h3 className="aftersignup-subtitle-collection">Categories</h3>
-              <div className="hscroll-strip no-scrollbar categories-strip">
-                {categories.map((cat) => (
-                  <article
-                    key={cat.id}
-                    className="category-card"
-                    aria-label={cat.title}
-                  >
+            <div className="hscroll-strip no-scrollbar categories-strip">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/categories/${cat.id}`}
+                  className="cover-frame"
+                  aria-label={`Open category ${cat.title}`}
+                >
+                  <article className="category-card">
                     {cat.coverImage && (
                       <img
                         src={cat.coverImage}
@@ -368,9 +395,9 @@ export default function CollectionPage() {
                     )}
                     <h3 className="category-title">{cat.title}</h3>
                   </article>
-                ))}
-              </div>
-            </>
+                </Link>
+              ))}
+            </div>
           )}
 
           {/* ---------- ALL [TYPE] ---------- */}
