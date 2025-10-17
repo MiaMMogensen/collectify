@@ -233,8 +233,8 @@ export default function CreateCategory() {
   }
 
   return (
-    <main className="landing-container" style={{ paddingBottom: 130 }}>
-      <div className="landing-text">
+    <main style={{ paddingBottom: 130 }}>
+      <div>
         <h1 className="page-title">New category</h1>
         {colType ? (
           <p

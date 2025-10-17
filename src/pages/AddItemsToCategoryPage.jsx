@@ -331,11 +331,8 @@ export default function AddItemsToCategoryPage() {
   }
 
   return (
-    <main
-      className="landing-container add-to-cat"
-      style={{ paddingBottom: 140 }}
-    >
-      <div className="landing-text">
+    <main className="add-to-cat" style={{ paddingBottom: 140 }}>
+      <div>
         <div className="landing-text has-back">
           <Link
             to={`/users/${
