@@ -66,7 +66,6 @@ export default function Signup() {
   async function createUserDoc(uid, { username, email }) {
     const now = serverTimestamp();
 
-    // use multipath update so empty branches actually exist
     await update(ref(db), {
       [`users/${uid}/uid`]: uid,
       [`users/${uid}/username`]: username,
@@ -76,14 +75,14 @@ export default function Signup() {
       [`users/${uid}/settings/privacy`]: "friends",
       [`users/${uid}/createdAt`]: now,
       [`users/${uid}/updatedAt`]: now,
-      // initialize empty trees with a placeholder key you can ignore in UI
+
       [`users/${uid}/collections/_placeholder`]: true,
       [`users/${uid}/collectionItems/_placeholder`]: true,
-      [`users/${uid}/categories/_placeholder`]: true,
       [`users/${uid}/favorites/_placeholder`]: true,
       [`users/${uid}/wishlist/_placeholder`]: true,
       [`users/${uid}/friends/_placeholder`]: true,
-      // keep the single username index in sync
+
+      // username index
       [`userIndex/usernames/${username}`]: uid,
     });
   }
@@ -184,11 +183,11 @@ export default function Signup() {
       } else {
         // user already has a username; ensure the index exists and user branches are initialized
         const uname = usersSnap.val();
+
         await update(ref(db), {
           [`userIndex/usernames/${uname}`]: uid,
           [`users/${uid}/collections/_placeholder`]: true,
           [`users/${uid}/collectionItems/_placeholder`]: true,
-          [`users/${uid}/categories/_placeholder`]: true,
           [`users/${uid}/favorites/_placeholder`]: true,
           [`users/${uid}/wishlist/_placeholder`]: true,
           [`users/${uid}/friends/_placeholder`]: true,

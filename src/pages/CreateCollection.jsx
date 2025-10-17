@@ -14,7 +14,8 @@ export default function CreateCollection() {
 
   const navigate = useNavigate();
 
-  const sanitize = (raw) =>
+  // Bruges KUN til slug/system-id – ikke til title
+  const makeSlug = (raw) =>
     String(raw || "")
       .trim()
       .toLowerCase()
@@ -23,16 +24,17 @@ export default function CreateCollection() {
       .slice(0, 20);
 
   function validateName(n) {
-    const s = sanitize(n);
-    if (!s || s.length < 3)
-      return "Navnet skal være mindst 3 tegn (a-z, 0-9 eller _).";
+    const plain = String(n || "").trim();
+    if (plain.length < 3) {
+      return "Navnet skal være mindst 3 tegn.";
+    }
     return null;
   }
 
   function validateUrl(u) {
     // enkel og stram: kræv https og filtype-indikator (jpg|jpeg|png|webp|gif|svg)
     const re = /^https:\/\/.+\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i;
-    return re.test(u.trim());
+    return re.test((u || "").trim());
   }
 
   async function handleSubmit(e) {
@@ -53,15 +55,22 @@ export default function CreateCollection() {
     }
 
     const user = auth.currentUser;
-    if (!user || !user.uid) {
+    if (!user?.uid) {
       return setError("Du skal være logget ind for at oprette en collection.");
+    }
+
+    const uid = user.uid;
+    const title = String(name).trim();
+    const slug = makeSlug(name);
+
+    if (!slug || slug.length < 3) {
+      return setError(
+        "Navnet skal indeholde mindst 3 bogstaver/tal (til slug)."
+      );
     }
 
     setLoading(true);
     try {
-      const uid = user.uid;
-      const collectionName = sanitize(name);
-
       // Opret collection-id
       const collectionsRef = dbRef(db, `users/${uid}/collections`);
       const newRef = push(collectionsRef);
@@ -70,20 +79,23 @@ export default function CreateCollection() {
 
       // Multipath update
       const updates = {};
+      // metadata
       updates[`users/${uid}/collections/${collectionId}/id`] = collectionId;
-      updates[`users/${uid}/collections/${collectionId}/title`] =
-        collectionName;
+      updates[`users/${uid}/collections/${collectionId}/title`] = title; // <-- bevar original
+      updates[`users/${uid}/collections/${collectionId}/slug`] = slug; // <-- renset til system
       updates[`users/${uid}/collections/${collectionId}/type`] = type;
       updates[`users/${uid}/collections/${collectionId}/coverImage`] =
         coverUrl.trim();
       updates[`users/${uid}/collections/${collectionId}/createdAt`] = now;
       updates[`users/${uid}/collections/${collectionId}/updatedAt`] = now;
 
-      // sørg for at de tomme grene eksisterer første gang
-      updates[`users/${uid}/collections/_placeholder`] = true;
-      updates[`users/${uid}/collectionItems/_placeholder`] = true;
+      // valgfri hjælpefelt til søgning/sortering
+      updates[`users/${uid}/collections/${collectionId}/title_lower`] =
+        title.toLowerCase();
 
-      updates[`users/${uid}/collections/_placeholder`] = null;
+      // sørg for at de tomme grene eksisterer første gang
+      updates[`users/${uid}/collectionItems/_placeholder`] = true;
+      updates[`users/${uid}/collectionItems/_placeholder`] = null;
 
       await update(dbRef(db), updates);
 
@@ -138,8 +150,9 @@ export default function CreateCollection() {
             placeholder="Enter name of collection"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            pattern="^[a-z0-9_]{3,20}$"
+            minLength={3}
             required
+            // fjernet pattern så brugeren kan skrive frit
           />
 
           <label className="cover-image-label">
@@ -154,7 +167,6 @@ export default function CreateCollection() {
               setImgOk(null);
             }}
             onBlur={(e) => {
-              // simpel URL-kliktest: lad <img> afgøre ok/fejl
               if (!validateUrl(e.target.value)) setImgOk(false);
             }}
             required
