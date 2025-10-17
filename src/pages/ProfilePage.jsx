@@ -1,10 +1,10 @@
 import Nav from "../components/Nav";
 
-export default function HomePage() {
+export default function ProfilePage() {
   return (
     <div className="page-container">
-      <h1>Home Page</h1>
-      <p>This is the Home page.</p>
+      <h1>Profile Page</h1>
+      <p>This is the Profile page.</p>
       <Nav />
     </div>
   );

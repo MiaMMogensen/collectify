@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from "react-router";
+// Nav.jsx
+import { NavLink, useLocation, useNavigate } from "react-router";
 import { useEffect, useState, useCallback } from "react";
 
 import addItem from "../assets/icons/additem.svg";
@@ -11,14 +12,11 @@ import profile from "../assets/icons/profile.svg";
 export default function Nav() {
   const [addOpen, setAddOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   const links = [
-    { to: "/", icon: home, label: "Hjem" },
-    {
-      to: "/users/:uid/collections/:collectionId",
-      icon: collections,
-      label: "Samlinger",
-    },
+    { to: "/homepage", icon: home, label: "Hjem" },
+    { to: "/allcollections", icon: collections, label: "Samlinger" },
     { to: "/add", icon: addItem, label: "Tilføj", isAdd: true },
     { to: "/favourites", icon: favourites, label: "Favoritter" },
     { to: "/profile", icon: profile, label: "Profil" },
@@ -40,15 +38,19 @@ export default function Nav() {
     setAddOpen((v) => !v);
   }, []);
 
+  // Brug navigate når admin vælger at oprette collection
   const onAddCollection = useCallback(() => {
-    // TODO: navigate("/collections/new") eller åbne modal
+    // naviger til den side hvor I opretter samlinger
+    navigate("/createcollection");
     setAddOpen(false);
-  }, []);
+  }, [navigate]);
 
+  // Brug navigate når admin vælger at tilføje item
   const onAddItem = useCallback(() => {
-    // TODO: navigate("/items/new") eller åbne modal
+    // naviger til den side hvor I opretter items
+    navigate("/additem");
     setAddOpen(false);
-  }, []);
+  }, [navigate]);
 
   return (
     <>
@@ -96,24 +98,30 @@ export default function Nav() {
 
           const imgSrc = isAdd && addOpen ? addItemOpen : link.icon;
 
-          return isAdd ? (
-            <a
-              key="add"
-              href="/add"
-              className="nav-link is-add"
-              onClick={toggleAdd}
-              aria-expanded={addOpen}
-              aria-controls="add-popup"
-            >
-              <div className="icon-wrapper is-add">
-                <img
-                  src={imgSrc}
-                  alt={link.label}
-                  className="icon-image icon-add"
-                />
-              </div>
-            </a>
-          ) : (
+          if (isAdd) {
+            // brug <button> for at undgå faktisk navigation — vi styrer navigation fra popup-knapperne
+            return (
+              <button
+                key="add"
+                type="button"
+                className="nav-link is-add"
+                onClick={toggleAdd}
+                aria-expanded={addOpen}
+                aria-controls="add-popup"
+              >
+                <div className="icon-wrapper is-add">
+                  <img
+                    src={imgSrc}
+                    alt={link.label}
+                    className="icon-image icon-add"
+                  />
+                </div>
+              </button>
+            );
+          }
+
+          // Almindelige navlinks (brug NavLink så active class fungerer)
+          return (
             <NavLink
               key={link.to}
               to={link.to}

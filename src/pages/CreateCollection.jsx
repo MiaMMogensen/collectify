@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ref as dbRef, push, update, serverTimestamp } from "firebase/database";
 import { auth, db } from "../../firebase-config";
+import Nav from "../components/Nav";
 
 export default function CreateCollection() {
   const [name, setName] = useState("");
@@ -204,6 +205,7 @@ export default function CreateCollection() {
         {error && <div style={{ color: "red" }}>{error}</div>}
         {success && <div style={{ color: "green" }}>{success}</div>}
       </form>
+      <Nav />
     </main>
   );
 }
