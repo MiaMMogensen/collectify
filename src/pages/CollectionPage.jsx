@@ -376,28 +376,36 @@ export default function CollectionPage() {
 
           {/* ---------- CATEGORIES (øverst) ---------- */}
           {categories.length > 0 && (
-            <div className="hscroll-strip no-scrollbar categories-strip">
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/categories/${cat.id}`}
-                  className="cover-frame"
-                  aria-label={`Open category ${cat.title}`}
-                >
-                  <article className="category-card">
-                    {cat.coverImage && (
-                      <img
-                        src={cat.coverImage}
-                        alt={cat.title}
-                        className="category-cover"
-                        loading="lazy"
-                      />
-                    )}
-                    <h3 className="category-title">{cat.title}</h3>
-                  </article>
-                </Link>
-              ))}
-            </div>
+            <>
+              <h3
+                className="aftersignup-subtitle-collection"
+                style={{ paddingTop: 15 }}
+              >
+                Categories
+              </h3>
+              <div className="categories-strip">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/categories/${cat.id}`}
+                    className="cover-frame"
+                    aria-label={`Open category ${cat.title}`}
+                  >
+                    <article className="category-card">
+                      {cat.coverImage && (
+                        <img
+                          src={cat.coverImage}
+                          alt={cat.title}
+                          className="category-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      <h3 className="category-title">{cat.title}</h3>
+                    </article>
+                  </Link>
+                ))}
+              </div>
+            </>
           )}
 
           {/* ---------- ALL [TYPE] ---------- */}
