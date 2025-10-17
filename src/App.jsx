@@ -16,6 +16,10 @@ import AddCategory from "./pages/CreateCategory";
 import ScrollToTop from "./pages/ScrollToTop";
 import CategoryPage from "./pages/CategoryPage";
 import AddItemsToCategoryPage from "./pages/AddItemsToCategoryPage";
+import Favourites from "./pages/Favourites";
+import ProfilePage from "./pages/ProfilePage";
+import AllCollectionsPage from "./pages/AllCollectionsPage";
+import HomePage from "./pages/HomePage";
 
 export default function App() {
   useEffect(() => {
@@ -28,6 +32,7 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/homepage" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/createcollection" element={<CreateCollection />} />
@@ -52,6 +57,9 @@ export default function App() {
           <Route path="/submit" element={<SubmitPage />} />
           <Route path="/admin" element={<AdminPendingItems />} />
           <Route path="/submitsuccess" element={<SubmitSuccess />} />
+          <Route path="/favourites" element={<Favourites />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/allcollections" element={<AllCollectionsPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

@@ -102,6 +102,21 @@ a:hover {
 .nav-link.is-add {
   grid-column: 3;
   z-index: 33; /* over popuppen når den ligger bag */
+  appearance: none; /* fjern native look (webkit/moz) */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: none; /* ingen baggrund */
+  border: none; /* ingen kant */
+  padding: 0; /* ingen ekstra padding (klik-arealet bestemmes af .icon-wrapper) */
+  margin: 0;
+  outline: none; /* nat. outline fjernes, vi bruger focus-visible nedenfor */
+  display: inline-flex; /* match layout */
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link.is-add .icon-wrapper {
+  background: none;
 }
 
 /* aktiv farve (valgfrit) */
@@ -127,6 +142,17 @@ a:hover {
   height: 28px;
   object-fit: contain;
 }
+
+.nav-link:not(.is-add) .icon-image {
+  filter: brightness(0) invert(1); /* gør svg’er hvide */
+  transition: filter 0.2s ease;
+}
+
+/* Når navlink er aktivt -> sort ikon (men kun hvis det IKKE er "add") */
+.nav-link.active:not(.is-add) .icon-image {
+  filter: brightness(0); /* gør sort uanset originalfarve */
+}
+
 .icon-image.icon-add {
   transform: scale(1.6);
 }
