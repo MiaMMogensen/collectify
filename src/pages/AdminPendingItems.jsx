@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   get,
   set,
+  push,
 } from "firebase/database";
 import { db, auth } from "../../firebase-config";
 
@@ -106,19 +107,33 @@ export default function AdminPendingItems() {
 
       const now = serverTimestamp();
 
-      // skriv item til brugerens collection
-      const userItemPath = `users/${item.createdBy}/collections/${item.type}/items/${itemId}`;
-      const userItemData = {
-        ...item,
-        description: description || "",
-        coverImage: coverUrl || "",
-        tags: tags,
-        status: "approved",
-        approvedAt: now,
+      // i stedet for at skrive under collections/{type}/items/*
+      // opretter vi en entry under users/{creatorUid}/collectionItems/{newId}
+      // (så det matcher dit eksisterende collectionItems-setup)
+      const userCollectionRef = dbRef(
+        db,
+        `users/${item.createdBy}/collectionItems`
+      );
+      const newUserItemRef = push(userCollectionRef);
+      const newUserItemId = newUserItemRef.key;
+
+      const userCollectionPayload = {
+        id: newUserItemId,
+        sourceItemId: itemId, // refererer til det globale item
+        title: (item.title || "").trim(),
+        author: (item.author || "").trim(),
+        coverImage: coverUrl || item.coverImage || null,
+        type: item.type || "",
+        createdAt: now,
         updatedAt: now,
-        approvedBy: auth?.currentUser?.uid || null,
       };
-      await set(dbRef(db, userItemPath), userItemData);
+
+      await set(newUserItemRef, userCollectionPayload);
+      // (valgfrit) behold en _placeholder under collectionItems ligesom andre steder
+      await set(
+        dbRef(db, `users/${item.createdBy}/collectionItems/_placeholder`),
+        true
+      );
 
       // --- skriv fladt globalt item så din search komponent finder det ---
       const flatGlobalPath = `items/${itemId}`;
