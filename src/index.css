@@ -1463,6 +1463,8 @@ a:hover {
 .detail-page-item-title {
   margin-top: 15px;
   margin-left: 0px;
+}
+
 .profile-header {
   display: flex;
   justify-content: space-between;
