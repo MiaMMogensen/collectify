@@ -21,6 +21,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AllCollectionsPage from "./pages/AllCollectionsPage";
 import HomePage from "./pages/HomePage";
 import DetailPage from "./pages/DetailPage";
+import WishlistPage from "./pages/WishlistPage";
 
 export default function App() {
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function App() {
             path="/users/:uid/collections/:collectionId/items/:id"
             element={<DetailPage />}
           />
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

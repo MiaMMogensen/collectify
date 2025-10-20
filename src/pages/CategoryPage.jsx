@@ -30,7 +30,6 @@ function pickImage(val) {
     Array.isArray(val?.images) ? val.images[0] : "",
   ];
 
-  // fold objekter ud (nogle API'er returnerer { url: "..."} osv.)
   const extract = (x) => {
     if (typeof x === "string") return x;
     if (x && typeof x === "object") {
@@ -47,8 +46,8 @@ function pickImage(val) {
   return u.trim().replace(/^["']|["']$/g, "");
 }
 
+/* ---------- NY: matcher også maps til multi-kategori ---------- */
 function itemMatchesCategory(item, categoryId, categoryTitle) {
-  // fleksibel matching: støtter flere mulige felter/strukturer
   const id = String(categoryId || "").trim();
   const title = String(categoryTitle || "")
     .trim()
@@ -60,18 +59,37 @@ function itemMatchesCategory(item, categoryId, categoryTitle) {
   const cat = (item?.category || item?.Category || "").toString().toLowerCase();
   const catName = (item?.categoryName || "").toString().toLowerCase();
 
-  const catIds = Array.isArray(item?.categoryIds) ? item.categoryIds : [];
-  const cats = Array.isArray(item?.categories)
+  const catIdsArr = Array.isArray(item?.categoryIds) ? item.categoryIds : [];
+  const catsArr = Array.isArray(item?.categories)
     ? item.categories.map((c) => (c?.title || c)?.toString().toLowerCase())
     : [];
 
+  const catIdsMap =
+    item?.categoryIds &&
+    typeof item.categoryIds === "object" &&
+    !Array.isArray(item.categoryIds)
+      ? item.categoryIds
+      : null;
+  const catNamesMap =
+    item?.categoryNames && typeof item.categoryNames === "object"
+      ? item.categoryNames
+      : null;
+
   // match via id
-  if (id && (catId === id || catKey === id || catIds.includes(id))) return true;
+  if (id && (catId === id || catKey === id || catIdsArr.includes(id)))
+    return true;
+  if (id && catIdsMap && catIdsMap[id]) return true;
 
   // match via titler/navne
   if (title) {
     if (cat === title || catName === title) return true;
-    if (cats.includes(title)) return true;
+    if (catsArr.includes(title)) return true;
+    if (catNamesMap) {
+      const hasTitle = Object.values(catNamesMap)
+        .map((v) => String(v || "").toLowerCase())
+        .includes(title);
+      if (hasTitle) return true;
+    }
   }
 
   return false;
@@ -103,7 +121,7 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   const nestedPath = `${userRoot}/collectionItems/${collectionId}`;
   const flatPath = `${userRoot}/collectionItems`;
   let list = [];
-  let mode = "flat"; // hvis du vil gemme den
+  let mode = "flat";
 
   const getCover = (val) => {
     const candidates = [
@@ -119,19 +137,15 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     return u.replace(/^["']|["']$/g, "");
   };
 
-  // 1) PRØV NESTED FØRST, men IGNORÉR tomme noder
   try {
     const snap = await get(child(ref(db), nestedPath));
     if (snap.exists()) {
       const obj = snap.val() || {};
       for (const [key, val] of Object.entries(obj)) {
         if (!val || typeof val !== "object" || key === "_placeholder") continue;
-
         const title = String(val.title || val.name || "").trim();
         const cover = getCover(val);
-        // Skip “spøgelsesnoder” som kun indeholder kategori-felter
         if (!title && !cover) continue;
-
         list.push({
           id: key,
           title: title || "Untitled",
@@ -149,7 +163,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     console.warn("loadItemsForCollection (nested) error:", err);
   }
 
-  // 2) Fallback til FLAT hvis nested ikke gav rigtige items
   if (mode !== "nested") {
     list = [];
     try {
@@ -162,7 +175,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
           const title = String(val.title || val.name || "").trim();
           const cover = getCover(val);
           if (!title && !cover) continue;
-
           list.push({
             id: key,
             title: title || "Untitled",
@@ -181,14 +193,10 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     }
   }
 
-  // eventuelt filter på type
   const tf = normType(colType);
   if (tf) list = list.filter((it) => it.type === tf);
-
-  // nyeste først
   list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  return list; // hvis du vil bruge mode, returnér { list, mode }
+  return list;
 }
 
 /* ---------- component ---------- */
@@ -200,7 +208,6 @@ export default function CategoryPage() {
   const [err, setErr] = useState("");
   const navigate = useNavigate();
 
-  // søgning (valgfrit – matcher CollectionPage UX)
   const [q, setQ] = useState("");
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
@@ -212,7 +219,6 @@ export default function CategoryPage() {
       setErr("");
       setLoading(true);
       try {
-        // tillad både route-uid og auth.currentUser
         const me = auth.currentUser;
         const myUid = uid || me?.uid;
         if (!myUid) {
@@ -222,7 +228,6 @@ export default function CategoryPage() {
         }
         const userRoot = `users/${myUid}`;
 
-        // 1) collection (for type + topbar titel-stil)
         const colData = await loadCollection({ userRoot, collectionId });
         if (!colData) {
           setErr("Collection not found.");
@@ -230,7 +235,6 @@ export default function CategoryPage() {
           return;
         }
 
-        // 2) category (for kategoriens titel/cover)
         const catData = await loadCategory({
           userRoot,
           collectionId,
@@ -242,7 +246,6 @@ export default function CategoryPage() {
           return;
         }
 
-        // 3) hent ALLE items for collection/type
         const colType = normType(colData?.type);
         const list = await loadItemsForCollection({
           userRoot,
@@ -250,7 +253,6 @@ export default function CategoryPage() {
           colType,
         });
 
-        // 4) filtrér til kun items i denne kategori (robust match)
         const filtered = list.filter((it) =>
           itemMatchesCategory(it, catData.id, catData.title)
         );
@@ -312,7 +314,6 @@ export default function CategoryPage() {
 
   return (
     <main style={{ paddingBottom: 130 }}>
-      {/* Top – samme stil som CollectionPage */}
       <div>
         <button
           onClick={() => navigate(-1)}
@@ -324,7 +325,6 @@ export default function CategoryPage() {
         <h1 className="page-title">{cat?.title || "Untitled category"}</h1>
       </div>
 
-      {/* Søgning (valgfri – matcher din UX) */}
       <div className="search-container">
         <input
           type="search"
@@ -336,7 +336,6 @@ export default function CategoryPage() {
         {searching && <span className="search-hint">Searching…</span>}
       </div>
 
-      {/* Items som GRID (2 kolonner) */}
       {visibleItems.length === 0 ? (
         <div>
           <h3 className="aftersignup-subtitle">
@@ -365,13 +364,15 @@ export default function CategoryPage() {
                   )}
                 </div>
               </div>
-              <h3 className="item-title">{it.title}</h3>
+              <h3 className="item-title" title={it.title}>
+                {it.title}
+              </h3>
               {it.author ? <p className="item-sub">{it.author}</p> : null}
             </article>
           ))}
         </div>
       )}
-      {/* Bottom CTA – always visible */}
+
       <div className="get-started-btn create-collection-btn">
         <Link
           to={`/users/${
