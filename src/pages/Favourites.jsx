@@ -43,7 +43,11 @@ function pickImage(val) {
 export default function Favourites() {
   const navigate = useNavigate();
 
+  // Favourite items (hydrated)
   const [items, setItems] = useState([]);
+  // Favourite authors (KUN fra DB — ingen auto fra items)
+  const [favAuthors, setFavAuthors] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -55,6 +59,7 @@ export default function Favourites() {
   // filter via author-tags
   const [authorFilter, setAuthorFilter] = useState(null);
 
+  // ---- Load favourite ITEMS (IDs -> hydrate) ----
   useEffect(() => {
     let alive = true;
     setErr("");
@@ -150,6 +155,49 @@ export default function Favourites() {
     };
   }, []);
 
+  // ---- Load favourite AUTHORS (KUN fra DB) ----
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const authorsRef = dbRef(db, `users/${uid}/favourites/authors`);
+
+    const listener = (snap) => {
+      if (!snap.exists()) {
+        setFavAuthors([]);
+        return;
+      }
+      const names = new Set();
+      snap.forEach((ch) => {
+        const val = ch.val();
+        // Accept shapes: true | "Name" | { name/title/displayName/author: "Name" }
+        if (val === true) {
+          names.add(ch.key);
+        } else if (typeof val === "string") {
+          names.add(val);
+        } else if (val && typeof val === "object") {
+          const n =
+            val.name ||
+            val.title ||
+            val.author ||
+            val.displayName ||
+            val.slug ||
+            "";
+          if (n && typeof n === "string") names.add(n);
+        }
+      });
+      setFavAuthors(
+        Array.from(names).sort((a, b) =>
+          a.toLowerCase().localeCompare(b.toLowerCase())
+        )
+      );
+    };
+
+    onValue(authorsRef, listener);
+    return () => off(authorsRef, "value", listener);
+  }, []);
+
+  // ---- Search + filter ----
   const onSearchChange = (e) => {
     const val = e.target.value;
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -176,6 +224,7 @@ export default function Favourites() {
     );
   }, [filteredBySearch, authorFilter]);
 
+  // grupper pr. type
   const itemsByType = useMemo(() => {
     const map = new Map();
     for (const it of filtered) {
@@ -185,17 +234,6 @@ export default function Favourites() {
     }
     return map;
   }, [filtered]);
-
-  const authors = useMemo(() => {
-    const set = new Set();
-    for (const it of items) {
-      const a = (it.author || "").trim();
-      if (a) set.add(a);
-    }
-    return Array.from(set).sort((a, b) =>
-      a.toLowerCase().localeCompare(b.toLowerCase())
-    );
-  }, [items]);
 
   if (loading) {
     return (
@@ -221,6 +259,7 @@ export default function Favourites() {
 
   return (
     <main style={{ paddingBottom: 130 }}>
+      {/* Top */}
       <div>
         <button
           onClick={() => navigate(-1)}
@@ -232,6 +271,7 @@ export default function Favourites() {
         <h1 className="page-title">Favourites</h1>
       </div>
 
+      {/* Search */}
       <div className="search-container">
         <input
           type="search"
@@ -243,13 +283,14 @@ export default function Favourites() {
         {searching && <span className="search-hint">Searching…</span>}
       </div>
 
-      {authors.length > 0 && (
+      {/* Favourite authors as tags (DB only) */}
+      {favAuthors.length > 0 && (
         <>
           <h3 className="aftersignup-subtitle-collection">
             My favourite authors
           </h3>
-          <ul className="item-tags">
-            {authors.map((a) => (
+          <ul className="item-tags item-tags-wrap">
+            {favAuthors.map((a) => (
               <li
                 key={a}
                 className={`tag ${authorFilter === a ? "active" : ""}`}
@@ -270,9 +311,10 @@ export default function Favourites() {
         </>
       )}
 
+      {/* Items by type */}
       {rows.length === 0 ? (
         <div>
-          <h3 className="aftersignup-subtitle">No favourites yet.</h3>
+          <h3 className="aftersignup-subtitle">No favourite items yet.</h3>
         </div>
       ) : (
         rows.map(([t, list]) => (

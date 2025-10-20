@@ -1355,7 +1355,7 @@ a:hover {
   font-size: 20px;
 }
 
-.item-page .item-tags {
+.item-tags {
   display: flex;
   gap: 8px;
   list-style: none;
@@ -1364,7 +1364,7 @@ a:hover {
   margin-top: 15px;
 }
 
-.item-page .tag {
+.tag {
   padding: 8px 10px;
   background: #f0f0f0;
   border-radius: 12px;
@@ -1488,4 +1488,22 @@ a:hover {
   width: 18px;
   height: 18px;
   filter: brightness(0) invert(1);
+}
+
+/* Gør tag-listen flerrækket og stabil */
+.item-tags.item-tags-wrap {
+  display: flex;
+  flex-wrap: wrap; /* -> flere rækker */
+  gap: 8px 10px; /* lodret og vandret afstand */
+  align-items: flex-start; /* undgå strækning i højden */
+  padding: 0;
+  margin: 15px 12px 6px 12px; /* lidt luft på siderne */
+  list-style: none;
+}
+
+/* Hvert tag må ikke krympe, og teksten skal ikke brydes */
+.item-tags.item-tags-wrap .tag {
+  white-space: nowrap; /* stå på én linje */
+  flex: 0 0 auto; /* ingen shrinking */
+  min-width: 0; /* undgå uventet overflow-limits i flex */
 }
