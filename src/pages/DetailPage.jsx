@@ -1,6 +1,6 @@
 // DetailPage.jsx
 import { useEffect, useState, useRef } from "react";
-import { Link, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { db, auth } from "../../firebase-config";
 import {
   ref as dbRef,
@@ -23,6 +23,8 @@ export default function DetailPage() {
   const [processing, setProcessing] = useState(false);
   const [isInUserCollection, setIsInUserCollection] = useState(false);
   const [userCollectionItemId, setUserCollectionItemId] = useState(null);
+
+  const navigate = useNavigate();
 
   // wishlist state (true <=> findes i den LOGGEDE brugers wishlist)
   const [isInWishlist, setIsInWishlist] = useState(false);
@@ -417,14 +419,13 @@ export default function DetailPage() {
 
   return (
     <main className="item-page">
-      <Link
-        to={`/users/${
-          routeUid || auth.currentUser?.uid
-        }/collections/${collectionId}`}
+      <button
+        onClick={() => navigate(-1)}
         className="back-arrow-link"
+        aria-label="Go back"
       >
         <img src={backArrow} alt="Back" className="back-arrow" />
-      </Link>
+      </button>
 
       <div className="item-card">
         <div className="item-body">
