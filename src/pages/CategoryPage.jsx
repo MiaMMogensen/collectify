@@ -350,20 +350,28 @@ export default function CategoryPage() {
               className="collection-card"
               aria-label={it.title}
             >
-              <div className="cover-frame">
-                <div className="cover-wrap">
-                  {it.coverImage ? (
-                    <img
-                      src={it.coverImage}
-                      alt={it.title}
-                      className="cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="cover placeholder" />
-                  )}
+              <Link
+                to={`/users/${
+                  uid || auth.currentUser?.uid
+                }/collections/${collectionId}/items/${it.id}`}
+                aria-label={`View ${it.title}`}
+              >
+                <div className="cover-frame">
+                  <div className="cover-wrap">
+                    {it.coverImage ? (
+                      <img
+                        src={it.coverImage}
+                        alt={it.title}
+                        className="cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="cover placeholder" />
+                    )}
+                  </div>
                 </div>
-              </div>
+              </Link>
+
               <h3 className="item-title" title={it.title}>
                 {it.title}
               </h3>
