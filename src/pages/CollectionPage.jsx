@@ -440,8 +440,9 @@ export default function CollectionPage() {
               <h3 className="aftersignup-subtitle-collection">Discover</h3>
               <div className="hscroll-strip no-scrollbar">
                 {discover.map((it) => (
-                  <article
+                  <Link
                     key={it.id}
+                    to={`/items/${it.id}`}
                     className="collection-card"
                     aria-label={it.title}
                   >
@@ -461,7 +462,7 @@ export default function CollectionPage() {
                     </div>
                     <h3 className="item-title">{it.title}</h3>
                     {it.author ? <p className="item-sub">{it.author}</p> : null}
-                  </article>
+                  </Link>
                 ))}
               </div>
             </>

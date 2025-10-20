@@ -20,6 +20,7 @@ import Favourites from "./pages/Favourites";
 import ProfilePage from "./pages/ProfilePage";
 import AllCollectionsPage from "./pages/AllCollectionsPage";
 import HomePage from "./pages/HomePage";
+import DetailPage from "./pages/DetailPage";
 
 export default function App() {
   useEffect(() => {
@@ -60,6 +61,11 @@ export default function App() {
           <Route path="/favourites" element={<Favourites />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/allcollections" element={<AllCollectionsPage />} />
+          <Route path="/items/:id" element={<DetailPage />} />
+          <Route
+            path="/users/:uid/collections/:collectionId/items/:id"
+            element={<DetailPage />}
+          />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

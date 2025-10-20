@@ -1278,3 +1278,118 @@ a:hover {
 .add-to-cat .collection-card.is-disabled .item-sub {
   color: #888;
 }
+
+/* ItemDetail.css - ekstern stylesheet */
+
+.item-page {
+  max-width: 1000px;
+  color: var(--white);
+}
+
+.item-card {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 20px;
+  margin-bottom: 150px;
+}
+
+.item-cover {
+  width: 164px;
+  height: 247px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border-radius: 12px; /* yderste radius */
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+  padding: 2px; /* tykkelsen på “kanten” */
+}
+
+.item-cover.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.item-body {
+  flex: 1;
+}
+
+.item-title {
+  margin: 0 0 8px;
+  line-height: 1.1;
+  margin-top: 15px;
+}
+
+.item-author {
+  margin-bottom: 12px;
+  font-size: 20px;
+}
+
+.item-tags {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.tag {
+  padding: 8px 10px;
+  background: #f0f0f0;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--black);
+}
+
+.item-description {
+  margin: 12px 0 20px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  color: var(--white);
+}
+
+.item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 220px;
+}
+
+.wishlist-btn,
+.getit-btn {
+  width: 330px;
+  margin-top: 10px;
+}
+
+.getit-btn {
+  margin-bottom: 100px;
+}
+
+.getit-btn.disabled,
+.wishlist-btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-text {
+  margin-top: 12px;
+  color: #b00020;
+}
+
+.success-text {
+  margin-top: 12px;
+  color: #0b8457;
+}
+
+.loading-text {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.back-link {
+  margin-top: 18px;
+}
