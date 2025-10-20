@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { auth, db } from "../../firebase-config";
 import { ref, child, get, update } from "firebase/database";
 import Nav from "../components/Nav";
@@ -334,15 +334,13 @@ export default function AddItemsToCategoryPage() {
     <main className="add-to-cat" style={{ paddingBottom: 140 }}>
       <div>
         <div className="landing-text has-back">
-          <Link
-            to={`/users/${
-              uid || auth.currentUser?.uid
-            }/collections/${collectionId}/categories/${categoryId}`}
+          <button
+            onClick={() => navigate(-1)}
             className="back-arrow-link"
-            aria-label="Go back to category"
+            aria-label="Go back"
           >
             <img src={backArrow} alt="Back" className="back-arrow" />
-          </Link>
+          </button>
 
           <h1 className="page-title">
             Add items to “{capitalizeWords(cat?.title || "category")}”
