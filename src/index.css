@@ -1172,7 +1172,7 @@ a:hover {
 .back-arrow-link {
   position: absolute;
   left: 15px;
-  top: 60px;
+  top: 50px;
   transform: translateY(-8px);
   padding: 6px;
   text-decoration: none;

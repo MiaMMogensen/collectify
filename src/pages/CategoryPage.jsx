@@ -310,9 +310,9 @@ export default function CategoryPage() {
   }
 
   return (
-    <main className="landing-container" style={{ paddingBottom: 130 }}>
+    <main style={{ paddingBottom: 130 }}>
       {/* Top – samme stil som CollectionPage */}
-      <div className="landing-text">
+      <div>
         <Link
           to={`/users/${
             uid || auth.currentUser?.uid

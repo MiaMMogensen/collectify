@@ -16,7 +16,6 @@ function normType(t) {
 }
 
 function pickImage(val) {
-  // håndter nested felter + et par almindelige aliaser
   const candidates = [
     val?.images?.cover,
     val?.coverImage,
@@ -25,7 +24,6 @@ function pickImage(val) {
     val?.thumbnail,
   ];
   let u = (candidates.find(Boolean) || "").trim();
-  // fjern evt. omgivende quotes
   u = u.replace(/^["']|["']$/g, "");
   return u;
 }
@@ -34,7 +32,7 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   const nestedPath = `${userRoot}/collectionItems/${collectionId}`;
   const flatPath = `${userRoot}/collectionItems`;
   let list = [];
-  let mode = "flat"; // hvis du vil gemme den
+  let mode = "flat";
 
   const getCover = (val) => {
     const candidates = [
@@ -50,17 +48,14 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     return u.replace(/^["']|["']$/g, "");
   };
 
-  // 1) PRØV NESTED FØRST, men IGNORÉR tomme noder
   try {
     const snap = await get(child(ref(db), nestedPath));
     if (snap.exists()) {
       const obj = snap.val() || {};
       for (const [key, val] of Object.entries(obj)) {
         if (!val || typeof val !== "object" || key === "_placeholder") continue;
-
         const title = String(val.title || val.name || "").trim();
         const cover = getCover(val);
-        // Skip “spøgelsesnoder” som kun indeholder kategori-felter
         if (!title && !cover) continue;
 
         list.push({
@@ -80,7 +75,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     console.warn("loadItemsForCollection (nested) error:", err);
   }
 
-  // 2) Fallback til FLAT hvis nested ikke gav rigtige items
   if (mode !== "nested") {
     list = [];
     try {
@@ -112,14 +106,10 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     }
   }
 
-  // eventuelt filter på type
   const tf = normType(colType);
   if (tf) list = list.filter((it) => it.type === tf);
-
-  // nyeste først
   list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  return list; // hvis du vil bruge mode, returnér { list, mode }
+  return list;
 }
 
 async function loadCategories({ userRoot, collectionId }) {
@@ -144,7 +134,6 @@ async function loadCategories({ userRoot, collectionId }) {
   } catch (err) {
     console.warn("⚠️ loadCategories error:", err);
   }
-  // nyeste først (valgfrit)
   list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   return list;
 }
@@ -154,7 +143,7 @@ async function loadDiscoverForType({ colType, userItemIdsSet }) {
   if (!tf) return [];
 
   try {
-    const snap = await get(child(ref(db), "items")); // <- ingen leading slash
+    const snap = await get(child(ref(db), "items"));
     if (!snap.exists()) return [];
 
     const obj = snap.val() || {};
@@ -162,17 +151,13 @@ async function loadDiscoverForType({ colType, userItemIdsSet }) {
     for (const [key, val] of Object.entries(obj)) {
       if (!val || typeof val !== "object" || key === "_placeholder") continue;
 
-      // match kun samme type
       const itemType = normType(val.type);
       if (itemType !== tf) continue;
-
-      // skip ting brugeren har
       if (userItemIdsSet.has(key)) continue;
 
       const title = String(val.title || val.name || "").trim();
       const author = String(val.author || val.artist || "").trim();
 
-      // undgå dubletter via "titel|forfatter" signatur
       const sig = `${title.toLowerCase()}|${author.toLowerCase()}`;
       if (userItemIdsSet.__sigs && userItemIdsSet.__sigs.has(sig)) continue;
 
@@ -180,7 +165,7 @@ async function loadDiscoverForType({ colType, userItemIdsSet }) {
         id: val.id || key,
         title: title || "Untitled",
         author,
-        coverImage: pickImage(val), // <-- her!
+        coverImage: pickImage(val),
         type: itemType,
         popularity: Number(val.popularity || 0),
         createdAt: Number(val.createdAt || 0),
@@ -188,7 +173,6 @@ async function loadDiscoverForType({ colType, userItemIdsSet }) {
       });
     }
 
-    // sortér: mest populære → nyeste → alfabetisk
     pool.sort((a, b) => {
       const p = (b.popularity || 0) - (a.popularity || 0);
       if (p) return p;
@@ -234,7 +218,6 @@ export default function CollectionPage() {
         }
         const userRoot = `users/${me.uid}`;
 
-        // 1) collection
         const colSnap = await get(
           child(ref(db), `${userRoot}/collections/${collectionId}`)
         );
@@ -246,17 +229,14 @@ export default function CollectionPage() {
         const colData = colSnap.val() || {};
         const colType = normType(colData?.type);
 
-        // 2) items (i den aktuelle collection / type)
         const list = await loadItemsForCollection({
           userRoot,
           collectionId,
           colType,
         });
 
-        // 3) categories (under collectionen)
         const cats = await loadCategories({ userRoot, collectionId });
 
-        // 4) discover (populære items af samme type, som brugeren ikke har)
         const userItemIdsSet = new Set(list.map((x) => x.id));
         userItemIdsSet.__sigs = new Set(
           list.map(
@@ -290,8 +270,7 @@ export default function CollectionPage() {
         debounceRef.current = null;
       }
     };
-    // <-- vigtig: ingen ekstra } eller ) efter denne linje!
-  }, [collectionId]); // <-- slut på useEffect
+  }, [collectionId]);
 
   const visibleItems = useMemo(() => {
     const term = (q || "").trim().toLowerCase();
@@ -334,16 +313,87 @@ export default function CollectionPage() {
     "";
 
   const meUid = auth.currentUser?.uid;
-  const addItemHref = meUid
-    ? `/users/${meUid}/collections/${collectionId}/add-item`
-    : "#";
   const addCategoryHref = meUid
     ? `/users/${meUid}/collections/${collectionId}/createcategory`
     : "#";
 
+  // *** NYT: afgør om vi søger ***
+  const searchActive = (q || "").trim().length > 0;
+
+  // --- Sektioner (genbrug med samme CSS-klasser) ---
+  const CategoriesSection = categories.length > 0 && (
+    <>
+      <h3
+        className="aftersignup-subtitle-collection"
+        style={{ paddingTop: 15 }}
+      >
+        Categories
+      </h3>
+      <div className="categories-strip">
+        {categories.map((cat) => (
+          <Link
+            key={cat.id}
+            to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/categories/${cat.id}`}
+            className="cover-frame"
+            aria-label={`Open category ${cat.title}`}
+          >
+            <article className="category-card">
+              {cat.coverImage && (
+                <img
+                  src={cat.coverImage}
+                  alt={cat.title}
+                  className="category-cover"
+                  loading="lazy"
+                />
+              )}
+              <h3 className="category-title">{cat.title}</h3>
+            </article>
+          </Link>
+        ))}
+      </div>
+    </>
+  );
+
+  const AllSection = (
+    <>
+      <h3 className="aftersignup-subtitle-collection">
+        All {typeLabel.toLowerCase()}
+      </h3>
+      <div className="hscroll-strip no-scrollbar">
+        {visibleItems.map((it) => (
+          <article
+            key={it.id}
+            className="collection-card"
+            aria-label={it.title}
+          >
+            <div className="cover-frame">
+              <div className="cover-wrap">
+                {it.coverImage ? (
+                  <img
+                    src={it.coverImage}
+                    alt={it.title}
+                    className="cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="cover placeholder" />
+                )}
+              </div>
+            </div>
+            <h3 className="item-title">{it.title}</h3>
+            {it.author ? <p className="item-sub">{it.author}</p> : null}
+          </article>
+        ))}
+      </div>
+      {searchActive && visibleItems.length === 0 && (
+        <p style={{ opacity: 0.8, padding: "0 15px" }}>No matches found.</p>
+      )}
+    </>
+  );
+
   return (
-    <main className="landing-container" style={{ paddingBottom: 130 }}>
-      <div className="landing-text">
+    <main style={{ paddingBottom: 130 }}>
+      <div>
         <h1 className="page-title">{col?.title || "Untitled collection"}</h1>
       </div>
 
@@ -353,10 +403,7 @@ export default function CollectionPage() {
             This {(typeLabel || "collection").toLowerCase()} is empty. Add your
             first item!
           </h3>
-          <Link
-            to={addItemHref}
-            className="get-started-btn create-collection-btn"
-          >
+          <Link to="/additem" className="get-started-btn create-collection-btn">
             Add items +
           </Link>
         </div>
@@ -374,71 +421,18 @@ export default function CollectionPage() {
             {searching && <span className="search-hint">Searching…</span>}
           </div>
 
-          {/* ---------- CATEGORIES (øverst) ---------- */}
-          {categories.length > 0 && (
+          {/* *** DYNAMISK RÆKKEFØLGE *** */}
+          {searchActive ? (
             <>
-              <h3
-                className="aftersignup-subtitle-collection"
-                style={{ paddingTop: 15 }}
-              >
-                Categories
-              </h3>
-              <div className="categories-strip">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/categories/${cat.id}`}
-                    className="cover-frame"
-                    aria-label={`Open category ${cat.title}`}
-                  >
-                    <article className="category-card">
-                      {cat.coverImage && (
-                        <img
-                          src={cat.coverImage}
-                          alt={cat.title}
-                          className="category-cover"
-                          loading="lazy"
-                        />
-                      )}
-                      <h3 className="category-title">{cat.title}</h3>
-                    </article>
-                  </Link>
-                ))}
-              </div>
+              {AllSection}
+              {CategoriesSection}
+            </>
+          ) : (
+            <>
+              {CategoriesSection}
+              {AllSection}
             </>
           )}
-
-          {/* ---------- ALL [TYPE] ---------- */}
-          <h3 className="aftersignup-subtitle-collection">
-            All {typeLabel.toLowerCase()}
-          </h3>
-          <div className="hscroll-strip no-scrollbar">
-            {visibleItems.map((it) => (
-              <Link
-                key={it.id}
-                to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/items/${it.id}`}
-                className="collection-card"
-                aria-label={it.title}
-              >
-                <div className="cover-frame">
-                  <div className="cover-wrap">
-                    {it.coverImage ? (
-                      <img
-                        src={it.coverImage}
-                        alt={it.title}
-                        className="cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="cover placeholder" />
-                    )}
-                  </div>
-                </div>
-                <h3 className="item-title">{it.title}</h3>
-                {it.author ? <p className="item-sub">{it.author}</p> : null}
-              </Link>
-            ))}
-          </div>
 
           {/* ---------- DISCOVER ---------- */}
           {discover.length > 0 && (
@@ -484,7 +478,7 @@ export default function CollectionPage() {
               Add category +
             </Link>
             <Link
-              to={addItemHref}
+              to="/additem"
               className="get-started-btn"
               aria-label="Add item"
             >
