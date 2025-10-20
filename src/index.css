@@ -717,13 +717,18 @@ a:hover {
   flex-direction: column;
 }
 
+.add-item-page .success-text {
+  font-size: 14px;
+  margin-left: 15px;
+}
+
 .search-input {
   padding: 23px;
   border-radius: 12px;
   width: 96%;
 }
 
-.filter-btn {
+.add-item-page .filter-btn {
   border-radius: 12px;
   cursor: pointer;
   margin-top: 30px;
@@ -739,19 +744,19 @@ a:hover {
   border: 1px solid transparent;
 }
 
-.filter-btn.active {
+.add-item-page .filter-btn.active {
   background: var(--gradient);
   color: #fff;
   border: none;
 }
 
-.filter-buttons {
+.add-item-page .filter-buttons {
   display: flex;
   flex-wrap: wrap; /* så de hopper ned på ny linje, hvis der ikke er plads */
   gap: 10px;
 }
 
-.item-list {
+.add-item-page .item-list {
   list-style: none;
   padding: 0;
   margin-top: 12px;
@@ -759,30 +764,34 @@ a:hover {
   margin-left: 15px;
 }
 
-.item {
+.add-item-page .item {
   display: flex;
   gap: 12px;
-  align-items: center;
   justify-content: center;
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 8px;
   background: #f5f5f5;
+  align-items: center;
 }
 
-.item-cover {
+.add-item-page .item-cover {
   width: 64px;
   height: 64px;
   object-fit: cover;
   border-radius: 8px;
 }
 
-.item-info {
+.add-item-page .item-title {
+  margin-top: 0;
+}
+
+.add-item-page .item-info {
   flex: 1;
   color: var(--black);
 }
 
-.add-btn {
+.add-item-page .add-btn {
   padding: 0.5rem 0.8rem;
   border-radius: 8px;
   border: none;
@@ -790,9 +799,11 @@ a:hover {
   color: white;
   cursor: pointer;
   font-size: 14px;
+  width: 60px;
+  height: 36px;
 }
 
-.add-btn:disabled {
+.add-item-page .add-btn:disabled {
   background: #ccc;
   cursor: default;
 }
@@ -845,6 +856,7 @@ a:hover {
   font-weight: 600;
   margin: 8px 0 2px;
 }
+
 .item-sub {
   opacity: 0.8;
   margin: 0;
@@ -1299,7 +1311,7 @@ a:hover {
   color: var(--white);
 }
 
-.item-card {
+.item-page .item-card {
   display: flex;
   gap: 24px;
   align-items: flex-start;
@@ -1307,7 +1319,7 @@ a:hover {
   margin-bottom: 150px;
 }
 
-.item-cover {
+.item-page .item-cover {
   width: 164px;
   height: 247px;
   object-fit: cover;
@@ -1318,7 +1330,7 @@ a:hover {
   padding: 2px; /* tykkelsen på “kanten” */
 }
 
-.item-cover.placeholder {
+.item-page .item-cover.placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1326,30 +1338,30 @@ a:hover {
   font-size: 14px;
 }
 
-.item-body {
+.item-page .item-body {
   flex: 1;
 }
 
-.item-title {
+.item-page .item-title {
   margin: 0 0 8px;
   line-height: 1.1;
   margin-top: 15px;
 }
 
-.item-author {
-  margin-bottom: 12px;
+.item-page .item-author {
   font-size: 20px;
 }
 
-.item-tags {
+.item-page .item-tags {
   display: flex;
   gap: 8px;
   list-style: none;
   padding: 0;
   margin: 0 0 12px;
+  margin-top: 15px;
 }
 
-.tag {
+.item-page .tag {
   padding: 8px 10px;
   background: #f0f0f0;
   border-radius: 12px;
@@ -1357,52 +1369,95 @@ a:hover {
   color: var(--black);
 }
 
-.item-description {
+.item-page .item-description {
   margin: 12px 0 20px;
   white-space: pre-wrap;
   line-height: 1.45;
   color: var(--white);
 }
 
-.item-actions {
+.item-page .item-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
   max-width: 220px;
 }
 
-.wishlist-btn,
+.item-page .wishlist-btn,
 .getit-btn {
   width: 330px;
   margin-top: 10px;
 }
 
-.getit-btn {
+.item-page .getit-btn {
   margin-bottom: 100px;
 }
 
-.getit-btn.disabled,
+.item-page .getit-btn.disabled,
 .wishlist-btn[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.error-text {
+.item-page .error-text {
   margin-top: 12px;
   color: #b00020;
 }
 
-.success-text {
+.item-page .success-text {
   margin-top: 12px;
   color: #0b8457;
 }
 
-.loading-text {
+.item-page .loading-text {
   padding: 40px;
   text-align: center;
   color: #666;
 }
 
-.back-link {
+.item-page .back-link {
   margin-top: 18px;
+}
+
+/* Stjerne/favorites */
+.title-row,
+.author-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* knap for stjerne */
+.fav-star {
+  border: none;
+  background: transparent;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+/* default (ikke favorit) — lidt afdæmpet */
+
+/* fyldt favorit — fremhæv */
+.fav-star.filled img {
+  filter: none;
+  /* hvis du vil farve stjernen: */
+  /* transform svg via CSS fill hvis svgen bruger currentColor */
+  transform: scale(1.03);
+}
+
+/* hvis du vil sørge for stjernen ikke skubber layoutet for meget */
+.fav-star img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.detail-page-item-title {
+  margin-top: 15px;
+  margin-left: 0px;
 }
