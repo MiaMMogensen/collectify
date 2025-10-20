@@ -78,7 +78,7 @@ export default function Signup() {
 
       [`users/${uid}/collections/_placeholder`]: true,
       [`users/${uid}/collectionItems/_placeholder`]: true,
-      [`users/${uid}/favorites/_placeholder`]: true,
+      [`users/${uid}/favourites/_placeholder`]: true,
       [`users/${uid}/wishlist/_placeholder`]: true,
       [`users/${uid}/friends/_placeholder`]: true,
 
@@ -188,7 +188,7 @@ export default function Signup() {
           [`userIndex/usernames/${uname}`]: uid,
           [`users/${uid}/collections/_placeholder`]: true,
           [`users/${uid}/collectionItems/_placeholder`]: true,
-          [`users/${uid}/favorites/_placeholder`]: true,
+          [`users/${uid}/favourites/_placeholder`]: true,
           [`users/${uid}/wishlist/_placeholder`]: true,
           [`users/${uid}/friends/_placeholder`]: true,
         });
