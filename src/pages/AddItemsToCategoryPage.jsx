@@ -16,7 +16,7 @@ function normType(t) {
   return x;
 }
 
-// Robust pickImage der aldrig crasher og håndterer flere felter/typer
+// Robust pickImage
 function pickImage(val = {}) {
   const read = (x) => {
     if (!x) return "";
@@ -90,7 +90,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   const flatPath = `${userRoot}/collectionItems`;
   let list = [];
 
-  // 1) Nested
   try {
     const snap = await get(child(ref(db), nestedPath));
     if (snap.exists()) {
@@ -115,7 +114,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     console.warn("loadItemsForCollection nested error", e);
   }
 
-  // 2) Flat fallback
   if (list.length === 0) {
     try {
       const snap = await get(child(ref(db), flatPath));
@@ -142,7 +140,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
     }
   }
 
-  // sortér nyeste først
   list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   return list;
 }
@@ -154,6 +151,45 @@ function capitalizeWords(str = "") {
     .join(" ");
 }
 
+/* ---------- NY: helper til at tjekke membership på alle formater ---------- */
+function isInCat(it, cat) {
+  const idStr = String(cat.id);
+  const titleStr = String(cat.title || "").toLowerCase();
+
+  // single-felter (bagudkompatibilitet)
+  if (String(it.categoryId || it.categoryID || "") === idStr) return true;
+  if (String(it.category || it.categoryName || "").toLowerCase() === titleStr)
+    return true;
+
+  // arrays
+  if (Array.isArray(it.categoryIds) && it.categoryIds.includes(idStr))
+    return true;
+  if (Array.isArray(it.categories)) {
+    if (
+      it.categories
+        .map((c) => (c?.title || c)?.toString().toLowerCase())
+        .includes(titleStr)
+    )
+      return true;
+  }
+
+  // maps/objekter
+  if (
+    it.categoryIds &&
+    typeof it.categoryIds === "object" &&
+    it.categoryIds[idStr]
+  )
+    return true;
+  if (it.categoryNames && typeof it.categoryNames === "object") {
+    const foundByTitle = Object.values(it.categoryNames)
+      .map((v) => String(v || "").toLowerCase())
+      .includes(titleStr);
+    if (foundByTitle) return true;
+  }
+
+  return false;
+}
+
 /* ---------- component ---------- */
 export default function AddItemsToCategoryPage() {
   const { uid, collectionId, categoryId } = useParams();
@@ -162,11 +198,10 @@ export default function AddItemsToCategoryPage() {
   const [cat, setCat] = useState(null);
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(() => new Set());
-  const [alreadyInCat, setAlreadyInCat] = useState(new Set()); // ← vigtig ny state
+  const [alreadyInCat, setAlreadyInCat] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // søgning (valgfri)
   const [q, setQ] = useState("");
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
@@ -209,25 +244,16 @@ export default function AddItemsToCategoryPage() {
           colType,
         });
 
-        // find de items der allerede er i denne kategori (pre)
+        // hvilke items er allerede i denne kategori?
         const pre = new Set(
-          list
-            .filter(
-              (it) =>
-                (it.categoryId &&
-                  String(it.categoryId) === String(catData.id)) ||
-                (it.category &&
-                  it.category.toLowerCase() ===
-                    (catData.title || "").toLowerCase())
-            )
-            .map((it) => it.id)
+          list.filter((it) => isInCat(it, catData)).map((it) => it.id)
         );
 
         if (!alive) return;
         setCat(catData);
         setItems(list);
-        setSelected(new Set()); // ← start UDEN valg
-        setAlreadyInCat(new Set(pre)); // ← brug separat set til “allerede i kategori”
+        setSelected(new Set());
+        setAlreadyInCat(new Set(pre));
         setLoading(false);
       } catch (e) {
         console.error(e);
@@ -273,7 +299,6 @@ export default function AddItemsToCategoryPage() {
     });
   }
 
-  // Kun nyvalgte (ikke i alreadyInCat)
   const chosen = useMemo(() => {
     return [...selected].filter((id) => !alreadyInCat.has(id));
   }, [selected, alreadyInCat]);
@@ -286,19 +311,21 @@ export default function AddItemsToCategoryPage() {
       if (!myUid) return;
 
       const updates = {};
-      // skriv kun NYE valg
       chosen.forEach((itemId) => {
-        // Skriv til FLAT item (kilde)
-        updates[`users/${myUid}/collectionItems/${itemId}/categoryId`] = cat.id;
-        updates[`users/${myUid}/collectionItems/${itemId}/category`] =
-          cat.title;
+        // MULTI-membership: map af categoryIds og (valgfrit) categoryNames
+        updates[
+          `users/${myUid}/collectionItems/${itemId}/categoryIds/${cat.id}`
+        ] = true;
+        updates[
+          `users/${myUid}/collectionItems/${itemId}/categoryNames/${cat.id}`
+        ] = cat.title;
 
-        // Reverse index under category
+        // Reverse index under kategorien
         updates[
           `users/${myUid}/collections/${collectionId}/categories/${cat.id}/items/${itemId}`
         ] = true;
 
-        // Ryd evt. tom nested-node (forhindrer “Untitled”)
+        // (valgfrit) ryd evt. tom nested-node
         updates[`users/${myUid}/collectionItems/${collectionId}/${itemId}`] =
           null;
       });
@@ -348,7 +375,6 @@ export default function AddItemsToCategoryPage() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="search-container">
         <input
           type="search"
@@ -360,7 +386,6 @@ export default function AddItemsToCategoryPage() {
         {searching && <span className="search-hint">Searching…</span>}
       </div>
 
-      {/* Grid: 2 kolonner */}
       {visibleItems.length === 0 ? (
         <p className="aftersignup-subtitle">No items found.</p>
       ) : (
@@ -380,6 +405,7 @@ export default function AddItemsToCategoryPage() {
                 } ${isDisabled ? "is-disabled" : ""}`}
                 aria-pressed={isSel}
                 aria-label={`Select ${it.title}`}
+                title={it.title}
               >
                 <div
                   className={`cover-frame ${
@@ -407,7 +433,6 @@ export default function AddItemsToCategoryPage() {
         </div>
       )}
 
-      {/* Action bar nederst */}
       <div className="select-action-bar">
         <button
           className="get-started-btn create-collection-btn"

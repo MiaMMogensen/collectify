@@ -1166,6 +1166,9 @@ a:hover {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .category-grid .item-sub {
@@ -1460,4 +1463,27 @@ a:hover {
 .detail-page-item-title {
   margin-top: 15px;
   margin-left: 0px;
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 15px 30px 15px;
+}
+
+.wishlist-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wishlist-link img.wishlist-icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
 }
