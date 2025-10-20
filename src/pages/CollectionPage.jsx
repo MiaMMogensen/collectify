@@ -361,10 +361,12 @@ export default function CollectionPage() {
       </h3>
       <div className="hscroll-strip no-scrollbar">
         {visibleItems.map((it) => (
-          <article
+          <Link
             key={it.id}
+            to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/items/${it.id}`}
             className="collection-card"
-            aria-label={it.title}
+            aria-label={`Open ${it.title}`}
+            title={it.title}
           >
             <div className="cover-frame">
               <div className="cover-wrap">
@@ -382,7 +384,7 @@ export default function CollectionPage() {
             </div>
             <h3 className="item-title">{it.title}</h3>
             {it.author ? <p className="item-sub">{it.author}</p> : null}
-          </article>
+          </Link>
         ))}
       </div>
       {searchActive && visibleItems.length === 0 && (

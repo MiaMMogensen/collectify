@@ -13,6 +13,8 @@ import {
 } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
+import favourites from "../assets/icons/favourites.svg";
+import favouritesFilled from "../assets/icons/favourites-filled.svg";
 
 export default function DetailPage() {
   const { id, uid: routeUid, collectionId } = useParams();
@@ -29,10 +31,14 @@ export default function DetailPage() {
   // wishlist state (true <=> findes i den LOGGEDE brugers wishlist)
   const [isInWishlist, setIsInWishlist] = useState(false);
 
+  // favourites state
+  const [isItemFavorited, setIsItemFavorited] = useState(false);
+  const [isAuthorFavorited, setIsAuthorFavorited] = useState(false);
+
   // ref til at holde nuværende snapshot-compare-id (sourceItemId eller id)
   const comparableIdRef = useRef(null);
 
-  // --- helper fetch functions ---
+  // --- helper fetch functions (uændret) ---
   async function fetchGlobalItem(globalId) {
     if (!globalId) return null;
     const snap = await get(dbRef(db, `items/${globalId}`));
@@ -60,7 +66,7 @@ export default function DetailPage() {
     return found;
   }
 
-  // --- load item and compute comparableId ---
+  // --- load item and compute comparableId (uændret logik med samme effect som før) ---
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -69,13 +75,14 @@ export default function DetailPage() {
     setIsInUserCollection(false);
     setUserCollectionItemId(null);
     setIsInWishlist(false);
+    setIsItemFavorited(false);
+    setIsAuthorFavorited(false);
     comparableIdRef.current = null;
 
     (async () => {
       try {
         const currentUid = auth.currentUser?.uid;
 
-        // 1) hvis routeUid er angivet, tjek users/{routeUid}/collectionItems/{id}
         if (routeUid) {
           const userItem = await fetchUserCollectionItem(routeUid, id);
           if (userItem) {
@@ -99,14 +106,12 @@ export default function DetailPage() {
               },
             };
             if (mounted) setItem(merged);
-            // set comparable id used for wishlist matching
             comparableIdRef.current =
               userItem.sourceItemId || userItem.id || null;
             if (mounted) setLoading(false);
             return;
           }
 
-          // 1b) find by sourceItemId i user's collection
           const foundBySource = await findUserCollectionItemBySource(
             routeUid,
             id
@@ -137,7 +142,7 @@ export default function DetailPage() {
           }
         }
 
-        // 2) fallback: global item
+        // global fallback
         const globalItem = await fetchGlobalItem(id);
         if (globalItem) {
           if (mounted) setItem(globalItem);
@@ -159,7 +164,7 @@ export default function DetailPage() {
           return;
         }
 
-        // 3) fallback via collections/categories mapping (som tidligere)
+        // fallback via collections/categories mapping (som tidligere)
         if (routeUid && collectionId) {
           try {
             const categoriesSnap = await get(
@@ -233,57 +238,109 @@ export default function DetailPage() {
     };
   }, [id, routeUid, collectionId]);
 
-  // --- live wishlist listener for den loggede bruger ---
-  useEffect(
-    () => {
-      // vi sætter listener på users/{uid}/wishlist og opdaterer isInWishlist når snapshot ændrer sig
-      const unsubscribeRefs = [];
-      function attachWishlistListener(uid) {
-        const ref = dbRef(db, `users/${uid}/wishlist`);
-        const listener = (snap) => {
-          // compute whether any entry matches comparableIdRef.current
-          const compId = comparableIdRef.current;
-          if (!compId) {
-            setIsInWishlist(false);
-            return;
-          }
-          if (!snap.exists()) {
-            setIsInWishlist(false);
-            return;
-          }
-          let found = false;
-          snap.forEach((ch) => {
-            const val = ch.val();
-            if (val?.sourceItemId === compId || val?.itemId === compId) {
-              found = true;
-              return true;
-            }
-          });
-          setIsInWishlist(found);
-        };
-        onValue(ref, listener);
-        unsubscribeRefs.push(() => off(ref, "value", listener));
-      }
+  // --- live listeners: wishlist + favourites (items + authors) for den loggede bruger ---
+  useEffect(() => {
+    const unsubscribers = [];
 
-      const user = auth.currentUser;
-      if (user && user.uid) {
-        attachWishlistListener(user.uid);
-      } else {
-        // hvis bruger endnu ikke logged in, vent på auth-change
-        // du kan evt. lytte på auth state change i dit auth-setup; her antager vi auth.currentUser kan ændre sig —
-        // hvis du har et auth state listener centralt, overvej at flytte denne logic dertil.
-      }
-
-      return () => {
-        unsubscribeRefs.forEach((fn) => fn());
+    const attachListenersForUser = (uid) => {
+      // wishlist listener (eksisterende logic)
+      const wlRef = dbRef(db, `users/${uid}/wishlist`);
+      const wlListener = (snap) => {
+        const compId = comparableIdRef.current;
+        if (!compId) {
+          setIsInWishlist(false);
+          return;
+        }
+        if (!snap.exists()) {
+          setIsInWishlist(false);
+          return;
+        }
+        let found = false;
+        snap.forEach((ch) => {
+          const val = ch.val();
+          if (val?.sourceItemId === compId || val?.itemId === compId) {
+            found = true;
+            return true;
+          }
+        });
+        setIsInWishlist(found);
       };
-    },
-    [
-      /* kun kør én gang; leverer updates via comparableIdRef og onValue callback */
-    ]
-  );
+      onValue(wlRef, wlListener);
+      unsubscribers.push(() => off(wlRef, "value", wlListener));
 
-  // --- Add to wishlist (venter på DB-skrivning før state opdateres) ---
+      // favourites -> items
+      const favItemsRef = dbRef(db, `users/${uid}/favourites/items`);
+      const favItemsListener = (snap) => {
+        const compId = comparableIdRef.current;
+        if (!compId) {
+          setIsItemFavorited(false);
+          return;
+        }
+        if (!snap.exists()) {
+          setIsItemFavorited(false);
+          return;
+        }
+        // if there's a child with key == compId OR a child with sourceItemId/itemId == compId
+        let found = false;
+        snap.forEach((ch) => {
+          if (ch.key === compId) {
+            found = true;
+            return true;
+          }
+          const val = ch.val();
+          if (val?.sourceItemId === compId || val?.itemId === compId) {
+            found = true;
+            return true;
+          }
+        });
+        setIsItemFavorited(found);
+      };
+      onValue(favItemsRef, favItemsListener);
+      unsubscribers.push(() => off(favItemsRef, "value", favItemsListener));
+
+      // favourites -> authors
+      const favAuthorsRef = dbRef(db, `users/${uid}/favourites/authors`);
+      const favAuthorsListener = (snap) => {
+        const authorName = (item?.author || "").toString().trim();
+        if (!authorName) {
+          setIsAuthorFavorited(false);
+          return;
+        }
+        if (!snap.exists()) {
+          setIsAuthorFavorited(false);
+          return;
+        }
+        // key is encodedAuthor; attempt both enc and decode checks
+        const encoded = encodeURIComponent(authorName.toLowerCase());
+        let found = false;
+        snap.forEach((ch) => {
+          if (ch.key === encoded) {
+            found = true;
+            return true;
+          }
+          const val = ch.val();
+          if (val?.author && val.author === authorName) {
+            found = true;
+            return true;
+          }
+        });
+        setIsAuthorFavorited(found);
+      };
+      onValue(favAuthorsRef, favAuthorsListener);
+      unsubscribers.push(() => off(favAuthorsRef, "value", favAuthorsListener));
+    };
+
+    const user = auth.currentUser;
+    if (user && user.uid) {
+      attachListenersForUser(user.uid);
+    }
+
+    return () => {
+      unsubscribers.forEach((fn) => fn());
+    };
+  }, [item /* we rely on comparableIdRef inside callbacks */]);
+
+  // --- Add to wishlist (samme som før, men kortet ned) ---
   async function handleAddToWishlist() {
     setError("");
     setProcessing(true);
@@ -293,11 +350,9 @@ export default function DetailPage() {
         throw new Error("Du skal være logget ind for at tilføje til wishlist.");
       const uid = user.uid;
 
-      // compute comp id for matching
       const compId = comparableIdRef.current || item?.id || item?.sourceItemId;
       if (!compId) throw new Error("Kunne ikke bestemme item-id.");
 
-      // check duplicates precisely
       const wishlistSnap = await get(dbRef(db, `users/${uid}/wishlist`));
       if (wishlistSnap.exists()) {
         let already = false;
@@ -315,7 +370,6 @@ export default function DetailPage() {
         }
       }
 
-      // push new wishlist entry
       const newRef = push(dbRef(db, `users/${uid}/wishlist`));
       const payload = {
         id: newRef.key,
@@ -327,12 +381,10 @@ export default function DetailPage() {
         createdAt: Date.now(),
       };
 
-      // write (opdater parent path, så placeholder ikke overskrives)
       await update(dbRef(db), {
         [`users/${uid}/wishlist/${newRef.key}`]: payload,
       });
 
-      // kun når DB-skriv lykkes sætter vi UI-state; live-listener vil også opfange ændringen
       setIsInWishlist(true);
       setProcessing(false);
     } catch (err) {
@@ -342,7 +394,91 @@ export default function DetailPage() {
     }
   }
 
-  // --- Delete from collection (uændret logik bortset fra opsætning af state) ---
+  // --- Toggle favourite item ---
+  async function handleToggleFavouriteItem() {
+    setError("");
+    setProcessing(true);
+    try {
+      const user = auth.currentUser;
+      if (!user?.uid)
+        throw new Error("Du skal være logget ind for at ændre favoritter.");
+      const uid = user.uid;
+
+      const compId = comparableIdRef.current || item?.id || item?.sourceItemId;
+      if (!compId) throw new Error("Kunne ikke bestemme item-id for fav.");
+
+      const favPath = `users/${uid}/favourites/items/${compId}`;
+      const favRef = dbRef(db, favPath);
+
+      const snap = await get(favRef);
+      if (snap.exists()) {
+        // remove favourite
+        await remove(favRef);
+        setIsItemFavorited(false);
+      } else {
+        // set favourite (gem et payload med info)
+        const payload = {
+          id: compId,
+          itemId: compId,
+          sourceItemId: compId,
+          title: item?.title || "",
+          author: item?.author || "",
+          coverImage: item?.images?.cover || item?.coverImage || null,
+          createdAt: Date.now(),
+        };
+        await update(dbRef(db), { [favPath]: payload });
+        setIsItemFavorited(true);
+      }
+
+      setProcessing(false);
+    } catch (err) {
+      console.error("Toggle favourite item error:", err);
+      setError(err?.message || "Kunne ikke opdatere favorit for item.");
+      setProcessing(false);
+    }
+  }
+
+  // --- Toggle favourite author ---
+  async function handleToggleFavouriteAuthor() {
+    setError("");
+    setProcessing(true);
+    try {
+      const user = auth.currentUser;
+      if (!user?.uid)
+        throw new Error("Du skal være logget ind for at ændre favoritter.");
+      const uid = user.uid;
+
+      const authorName = (item?.author || "").toString().trim();
+      if (!authorName) throw new Error("Ingen author tilgængelig.");
+
+      const key = encodeURIComponent(authorName.toLowerCase());
+      const favPath = `users/${uid}/favourites/authors/${key}`;
+      const favRef = dbRef(db, favPath);
+
+      const snap = await get(favRef);
+      if (snap.exists()) {
+        // remove
+        await remove(favRef);
+        setIsAuthorFavorited(false);
+      } else {
+        const payload = {
+          id: key,
+          author: authorName,
+          createdAt: Date.now(),
+        };
+        await update(dbRef(db), { [favPath]: payload });
+        setIsAuthorFavorited(true);
+      }
+
+      setProcessing(false);
+    } catch (err) {
+      console.error("Toggle favourite author error:", err);
+      setError(err?.message || "Kunne ikke opdatere favorit for author.");
+      setProcessing(false);
+    }
+  }
+
+  // --- Delete from collection (uændret) ---
   async function handleDeleteFromCollection() {
     setProcessing(true);
     try {
@@ -351,12 +487,10 @@ export default function DetailPage() {
       const uid = user.uid;
       if (!userCollectionItemId) throw new Error("Intet item-id fundet.");
 
-      // fjern node
       await remove(
         dbRef(db, `users/${uid}/collectionItems/${userCollectionItemId}`)
       );
 
-      // forsøg også at fjerne mapping i collections/categories/*/items hvis relevant
       const collectionsSnap = await get(dbRef(db, `users/${uid}/collections`));
       if (collectionsSnap.exists()) {
         const updates = {};
@@ -429,8 +563,51 @@ export default function DetailPage() {
 
       <div className="item-card">
         <div className="item-body">
-          <h1 className="page-title item-title">{title}</h1>
-          <div className="item-author">{author}</div>
+          <div className="title-row">
+            <h1 className="page-title detail-page-item-title">{title}</h1>
+
+            {/* STJERNE TIL ITEM */}
+            <button
+              className={`fav-star ${isItemFavorited ? "filled" : "empty"}`}
+              onClick={handleToggleFavouriteItem}
+              aria-pressed={isItemFavorited}
+              title={
+                isItemFavorited
+                  ? "Fjern item fra favoritter"
+                  : "Tilføj item til favoritter"
+              }
+              disabled={processing}
+            >
+              <img
+                src={isItemFavorited ? favouritesFilled : favourites}
+                alt="favourite item"
+              />
+            </button>
+          </div>
+
+          <div className="author-row">
+            <div className="item-author">{author}</div>
+
+            {/* STJERNE TIL AUTHOR */}
+            <button
+              className={`fav-star author ${
+                isAuthorFavorited ? "filled" : "empty"
+              }`}
+              onClick={handleToggleFavouriteAuthor}
+              aria-pressed={isAuthorFavorited}
+              title={
+                isAuthorFavorited
+                  ? "Fjern author fra favoritter"
+                  : "Tilføj author til favoritter"
+              }
+              disabled={processing}
+            >
+              <img
+                src={isAuthorFavorited ? favouritesFilled : favourites}
+                alt="favourite author"
+              />
+            </button>
+          </div>
 
           {tags.length > 0 && (
             <ul className="item-tags">
