@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import { auth, db } from "../../firebase-config";
 import { ref, child, get } from "firebase/database";
 import Nav from "../components/Nav";
@@ -198,6 +198,7 @@ export default function CategoryPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const navigate = useNavigate();
 
   // søgning (valgfrit – matcher CollectionPage UX)
   const [q, setQ] = useState("");
@@ -313,15 +314,13 @@ export default function CategoryPage() {
     <main style={{ paddingBottom: 130 }}>
       {/* Top – samme stil som CollectionPage */}
       <div>
-        <Link
-          to={`/users/${
-            uid || auth.currentUser?.uid
-          }/collections/${collectionId}`}
+        <button
+          onClick={() => navigate(-1)}
           className="back-arrow-link"
-          aria-label="Go back to collection"
+          aria-label="Go back"
         >
           <img src={backArrow} alt="Back" className="back-arrow" />
-        </Link>
+        </button>
         <h1 className="page-title">{cat?.title || "Untitled category"}</h1>
       </div>
 

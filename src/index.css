@@ -1171,11 +1171,23 @@ a:hover {
 /* ---------- BACK ARROW ---------- */
 .back-arrow-link {
   position: absolute;
-  left: 15px;
-  top: 50px;
+  left: 25px;
+  top: 55px;
   transform: translateY(-8px);
-  padding: 6px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-arrow-link:focus {
+  outline: none;
 }
 
 .back-arrow {
@@ -1184,6 +1196,7 @@ a:hover {
   filter: brightness(0) invert(1);
   transition: transform 0.2s ease;
   display: block;
+  background: transparent;
 }
 
 /* ---------- ADD ITEMS TO CATEGORY PAGE ---------- */
