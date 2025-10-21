@@ -1,16 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signInWithPopup,
 } from "firebase/auth";
-import {
-  auth,
-  googleProvider,
-  ensureAnonAuth,
-  db,
-} from "../../firebase-config";
+import { auth, googleProvider, db } from "../../firebase-config";
 import { ref, child, get } from "firebase/database";
 import Google from "../assets/icons/google.svg";
 
@@ -21,11 +16,6 @@ export default function LogInd() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-
-  // sørger for at Firebase auth er klar – gæst hvis ikke logget ind
-  useEffect(() => {
-    ensureAnonAuth({ allowGuest: true, timeoutMs: 2000 });
-  }, []);
 
   async function redirectToFirstCollection(uid) {
     try {
