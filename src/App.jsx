@@ -8,7 +8,6 @@ import AfterSignUp from "./pages/AfterSignUp";
 import CollectionPage from "./pages/CollectionPage";
 import AddItem from "./pages/AddItem";
 import SubmitPage from "./pages/SubmitPage";
-import AdminPendingItems from "./pages/AdminPendingItems";
 import SubmitSuccess from "./pages/SubmitSuccess";
 import { useEffect } from "react";
 import { ensureAnonAuth } from "../firebase-config";
@@ -22,6 +21,7 @@ import AllCollectionsPage from "./pages/AllCollectionsPage";
 import HomePage from "./pages/HomePage";
 import DetailPage from "./pages/DetailPage";
 import WishlistPage from "./pages/WishlistPage";
+import AuthorPage from "./pages/AuthorPage";
 
 export default function App() {
   useEffect(() => {
@@ -57,7 +57,6 @@ export default function App() {
           />
           <Route path="/additem" element={<AddItem />} />
           <Route path="/submit" element={<SubmitPage />} />
-          <Route path="/admin" element={<AdminPendingItems />} />
           <Route path="/submitsuccess" element={<SubmitSuccess />} />
           <Route path="/favourites" element={<Favourites />} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -68,6 +67,7 @@ export default function App() {
             element={<DetailPage />}
           />
           <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/authors/:authorKey" element={<AuthorPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

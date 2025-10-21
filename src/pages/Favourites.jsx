@@ -294,17 +294,17 @@ export default function Favourites() {
               <li
                 key={a}
                 className={`tag ${authorFilter === a ? "active" : ""}`}
-                role="button"
-                tabIndex={0}
                 title={a}
-                onClick={() => setAuthorFilter(authorFilter === a ? null : a)}
-                onKeyDown={(e) =>
-                  (e.key === "Enter" || e.key === " ") &&
-                  setAuthorFilter(authorFilter === a ? null : a)
-                }
-                aria-pressed={authorFilter === a}
               >
-                {a}
+                <Link
+                  to={`/authors/${encodeURIComponent(a.toLowerCase())}`}
+                  onClick={() => setAuthorFilter(null)} // optional: ryd filter
+                  className="author-link"
+                  aria-label={`Open author ${a}`}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  {a}
+                </Link>
               </li>
             ))}
           </ul>

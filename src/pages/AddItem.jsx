@@ -16,6 +16,7 @@ export default function AddItem() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState(null);
+  const [addedItems, setAddedItems] = useState(new Set());
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -111,6 +112,7 @@ export default function AddItem() {
         });
         if (already) {
           setSuccessMsg("This item is already added.");
+          setAddedItems((prev) => new Set(prev).add(item.id));
           setAddingId(null);
           return;
         }
@@ -136,6 +138,7 @@ export default function AddItem() {
       updates[`users/${uid}/collectionItems/_placeholder`] = true;
 
       await update(dbRef(db), updates);
+      setAddedItems((prev) => new Set(prev).add(item.id));
       setSuccessMsg("Item added!");
     } catch (err) {
       console.error("Add item error:", err);
@@ -185,26 +188,29 @@ export default function AddItem() {
         <ul className="item-list">
           {!loading && results.length === 0 && q && <li>No results</li>}
 
-          {results.map((item) => (
-            <li key={item.id} className="item">
-              <img
-                src={item.coverImage || "/placeholder.png"}
-                alt={item.title}
-                className="item-cover"
-              />
-              <div className="item-info">
-                <div className="item-title">{item.title}</div>
-                <div className="item-author">{item.author}</div>
-              </div>
-              <button
-                onClick={() => handleAdd(item)}
-                disabled={addingId === item.id}
-                className="add-btn"
-              >
-                {addingId === item.id ? "Adding…" : "Add"}
-              </button>
-            </li>
-          ))}
+          {results.map((item) => {
+            const isAdded = addedItems.has(item.id);
+            return (
+              <li key={item.id} className="item">
+                <img
+                  src={item.coverImage || "/placeholder.png"}
+                  alt={item.title}
+                  className="item-cover"
+                />
+                <div className="item-info">
+                  <div className="item-title">{item.title}</div>
+                  <div className="item-author">{item.author}</div>
+                </div>
+                <button
+                  onClick={() => handleAdd(item)}
+                  disabled={addingId === item.id || isAdded}
+                  className={`add-btn ${isAdded ? "added" : ""}`}
+                >
+                  {addingId === item.id ? "Adding…" : isAdded ? "Added" : "Add"}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </section>
       <Link
