@@ -22,6 +22,7 @@ import HomePage from "./pages/HomePage";
 import DetailPage from "./pages/DetailPage";
 import WishlistPage from "./pages/WishlistPage";
 import AuthorPage from "./pages/AuthorPage";
+import AccountSettings from "./pages/AccountSettings";
 
 export default function App() {
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/authors/:authorKey" element={<AuthorPage />} />
           <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/account-settings" element={<AccountSettings />} />
         </Routes>
       </main>
     </>
