@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { auth, db } from "../../firebase-config";
-import { ref, child, get } from "firebase/database";
+import { ref, child, get, update } from "firebase/database"; // <-- tilføjet update
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 
@@ -46,7 +46,7 @@ function pickImage(val) {
   return u.trim().replace(/^["']|["']$/g, "");
 }
 
-/* ---------- NY: matcher også maps til multi-kategori ---------- */
+/* ---------- matcher også maps til multi-kategori ---------- */
 function itemMatchesCategory(item, categoryId, categoryTitle) {
   const id = String(categoryId || "").trim();
   const title = String(categoryTitle || "")
@@ -75,12 +75,10 @@ function itemMatchesCategory(item, categoryId, categoryTitle) {
       ? item.categoryNames
       : null;
 
-  // match via id
   if (id && (catId === id || catKey === id || catIdsArr.includes(id)))
     return true;
   if (id && catIdsMap && catIdsMap[id]) return true;
 
-  // match via titler/navne
   if (title) {
     if (cat === title || catName === title) return true;
     if (catsArr.includes(title)) return true;
@@ -206,6 +204,7 @@ export default function CategoryPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [deleting, setDeleting] = useState(false); // <-- NEW
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
@@ -297,6 +296,60 @@ export default function CategoryPage() {
     }, 250);
   }
 
+  // ---------- DELETE CATEGORY (med reverse cleanup af maps) ----------
+  async function handleDeleteCategory() {
+    if (!cat?.id) return;
+    if (
+      !window.confirm(`Delete category “${cat.title}”? This cannot be undone.`)
+    )
+      return;
+
+    try {
+      setDeleting(true);
+
+      const myUid = uid || auth.currentUser?.uid;
+      if (!myUid) throw new Error("Not logged in.");
+
+      const base = `users/${myUid}/collections/${collectionId}/categories/${cat.id}`;
+
+      // læs reverse index med items (hvis det findes)
+      let itemIds = [];
+      try {
+        const snap = await get(child(ref(db), `${base}/items`));
+        if (snap.exists()) itemIds = Object.keys(snap.val() || {});
+      } catch (e) {
+        console.warn("Delete category: failed to read reverse index", e);
+      }
+
+      const updates = {};
+
+      // 1) Slet selve kategorien (inkl. children som /items)
+      updates[base] = null;
+
+      // 2) Ryd kategori-referencer på items (separate grene -> ok i samme update)
+      for (const itemId of itemIds) {
+        updates[
+          `users/${myUid}/collectionItems/${itemId}/categoryIds/${cat.id}`
+        ] = null;
+        updates[
+          `users/${myUid}/collectionItems/${itemId}/categoryNames/${cat.id}`
+        ] = null;
+      }
+
+      await update(ref(db), updates);
+
+      navigate(`/users/${myUid}/collections/${collectionId}`);
+    } catch (e) {
+      console.error("Delete category failed:", e?.code, e?.message);
+      setErr(
+        e?.code === "PERMISSION_DENIED"
+          ? "Permission denied by rules."
+          : e?.message || "Could not delete category."
+      );
+      setDeleting(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="landing-container">
@@ -381,14 +434,25 @@ export default function CategoryPage() {
         </div>
       )}
 
-      <div className="get-started-btn create-collection-btn">
+      {/* ---------- CTA buttons (samme CSS som CollectionPage) ---------- */}
+      <div className="landing-page-btns" style={{ marginTop: 20 }}>
+        <button
+          onClick={handleDeleteCategory}
+          className="login-btn"
+          aria-label="Delete category"
+          disabled={deleting}
+        >
+          {deleting ? "Deleting…" : "Delete category"}
+        </button>
+
         <Link
           to={`/users/${
             uid || auth.currentUser?.uid
           }/collections/${collectionId}/categories/${cat?.id}/add-items`}
+          className="get-started-btn"
           aria-label="Add items to this category"
         >
-          Add items to this category
+          Add items +
         </Link>
       </div>
 

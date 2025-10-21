@@ -323,12 +323,7 @@ export default function CollectionPage() {
   // --- Sektioner (genbrug med samme CSS-klasser) ---
   const CategoriesSection = categories.length > 0 && (
     <>
-      <h3
-        className="aftersignup-subtitle-collection"
-        style={{ paddingTop: 15 }}
-      >
-        Categories
-      </h3>
+      <h3 className="aftersignup-subtitle-collection">Categories</h3>
       <div className="categories-strip">
         {categories.map((cat) => (
           <Link
@@ -395,8 +390,24 @@ export default function CollectionPage() {
 
   return (
     <main style={{ paddingBottom: 130 }}>
-      <div>
-        <h1 className="page-title">{col?.title || "Untitled collection"}</h1>
+      <div className="title-row" style={{ marginLeft: 15 }}>
+        <h1 className="page-title detail-page-item-title">
+          {col?.title || "Untitled collection"}
+        </h1>
+
+        {/* EDIT-KNAP — samme struktur og CSS som fav-star */}
+        <Link
+          to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/edit`}
+          className="fav-star empty" // bruger eksisterende stil
+          aria-label="Edit collection"
+          title="Edit collection"
+        >
+          <img
+            src="/icons/edit.svg" // ← læg evt. et simpelt pencil-ikon her
+            alt="edit collection"
+            className="fav-icon"
+          />
+        </Link>
       </div>
 
       {items.length === 0 ? (

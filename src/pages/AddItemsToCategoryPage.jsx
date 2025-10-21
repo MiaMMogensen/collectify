@@ -79,6 +79,7 @@ async function loadCategory({ userRoot, collectionId, categoryId }) {
   return {
     id: val.id || categoryId,
     title: val.title || "Untitled",
+    type: normType(val.type || ""), // <— sørg for at vi kan bruge type her
     coverImage: val.coverImage || "",
     createdAt: Number(val.createdAt || 0),
     ...val,
@@ -91,6 +92,7 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   let list = [];
 
   try {
+    // NESTED: items hører allerede til collectionId
     const snap = await get(child(ref(db), nestedPath));
     if (snap.exists()) {
       const obj = snap.val() || {};
@@ -115,6 +117,7 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   }
 
   if (list.length === 0) {
+    // FLAT: filtrér kun dem der hører til denne collection
     try {
       const snap = await get(child(ref(db), flatPath));
       if (snap.exists()) {
@@ -127,7 +130,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
             author: val.author || val.artist || "",
             coverImage: pickImage(val),
             type: normType(val.type || colType),
-            collectionId: val.collectionId,
             createdAt: Number(val.createdAt || 0),
             categoryId: val.categoryId || val.categoryID || "",
             category: val.category || val.categoryName || "",
@@ -151,17 +153,15 @@ function capitalizeWords(str = "") {
     .join(" ");
 }
 
-/* ---------- NY: helper til at tjekke membership på alle formater ---------- */
+/* ---------- membership på alle formater ---------- */
 function isInCat(it, cat) {
   const idStr = String(cat.id);
   const titleStr = String(cat.title || "").toLowerCase();
 
-  // single-felter (bagudkompatibilitet)
   if (String(it.categoryId || it.categoryID || "") === idStr) return true;
   if (String(it.category || it.categoryName || "").toLowerCase() === titleStr)
     return true;
 
-  // arrays
   if (Array.isArray(it.categoryIds) && it.categoryIds.includes(idStr))
     return true;
   if (Array.isArray(it.categories)) {
@@ -173,7 +173,6 @@ function isInCat(it, cat) {
       return true;
   }
 
-  // maps/objekter
   if (
     it.categoryIds &&
     typeof it.categoryIds === "object" &&
@@ -237,12 +236,27 @@ export default function AddItemsToCategoryPage() {
           setLoading(false);
           return;
         }
-        const colType = normType(colData?.type);
-        const list = await loadItemsForCollection({
+
+        // Tilladt type (kategori har forrang – ellers collection)
+        let allowedType = normType(catData?.type || colData?.type);
+        // Hvis hverken kategori eller collection har en brugbar type, så vis alt
+        const hasAllowed = !!allowedType;
+        if (!hasAllowed) {
+          // sidste nød-fallback: hvis vi ikke kan udlede type, viser vi alle items
+          allowedType = "";
+        }
+
+        // Hent items for collection (sætter type fallback til collection-typen)
+        const listRaw = await loadItemsForCollection({
           userRoot,
           collectionId,
-          colType,
+          colType: normType(colData?.type),
         });
+
+        // **Filter kun de items der matcher allowedType**
+        const list = hasAllowed
+          ? listRaw.filter((it) => normType(it.type) === allowedType)
+          : listRaw; // vis alt hvis vi ikke med sikkerhed kender typen
 
         // hvilke items er allerede i denne kategori?
         const pre = new Set(

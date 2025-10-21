@@ -38,6 +38,7 @@ function pickImage(val) {
   ).trim();
   return u.replace(/^["']|["']$/g, "");
 }
+const normName = (s) => (s || "").trim().toLowerCase();
 
 /* ---------- component ---------- */
 export default function Favourites() {
@@ -45,8 +46,13 @@ export default function Favourites() {
 
   // Favourite items (hydrated)
   const [items, setItems] = useState([]);
-  // Favourite authors (KUN fra DB — ingen auto fra items)
-  const [favAuthors, setFavAuthors] = useState([]);
+
+  // Rå navneliste fra DB (uden type)
+  const [favAuthorNames, setFavAuthorNames] = useState([]);
+
+  // Afledt split
+  const [favBookAuthors, setFavBookAuthors] = useState([]); // books
+  const [favArtists, setFavArtists] = useState([]); // albums + vinyl
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -56,7 +62,7 @@ export default function Favourites() {
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
 
-  // filter via author-tags
+  // filter via author-tags (valgfrit hvis I vil aktivere igen)
   const [authorFilter, setAuthorFilter] = useState(null);
 
   // ---- Load favourite ITEMS (IDs -> hydrate) ----
@@ -155,7 +161,7 @@ export default function Favourites() {
     };
   }, []);
 
-  // ---- Load favourite AUTHORS (KUN fra DB) ----
+  // ---- Load favourite AUTHORS (rå navne fra DB – UDEN type) ----
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
@@ -164,7 +170,7 @@ export default function Favourites() {
 
     const listener = (snap) => {
       if (!snap.exists()) {
-        setFavAuthors([]);
+        setFavAuthorNames([]);
         return;
       }
       const names = new Set();
@@ -172,7 +178,7 @@ export default function Favourites() {
         const val = ch.val();
         // Accept shapes: true | "Name" | { name/title/displayName/author: "Name" }
         if (val === true) {
-          names.add(ch.key);
+          names.add(decodeURIComponent(ch.key || ""));
         } else if (typeof val === "string") {
           names.add(val);
         } else if (val && typeof val === "object") {
@@ -186,7 +192,7 @@ export default function Favourites() {
           if (n && typeof n === "string") names.add(n);
         }
       });
-      setFavAuthors(
+      setFavAuthorNames(
         Array.from(names).sort((a, b) =>
           a.toLowerCase().localeCompare(b.toLowerCase())
         )
@@ -196,6 +202,82 @@ export default function Favourites() {
     onValue(authorsRef, listener);
     return () => off(authorsRef, "value", listener);
   }, []);
+
+  // ---- Udled type pr. author via egne collectionItems + fav items ----
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (!uid || favAuthorNames.length === 0) {
+      setFavBookAuthors([]);
+      setFavArtists([]);
+      return;
+    }
+
+    let alive = true;
+
+    (async () => {
+      try {
+        // 1) Læs alle dine collectionItems (indeholder author + type)
+        const userItemsSnap = await get(
+          dbRef(db, `users/${uid}/collectionItems`)
+        );
+
+        // Byg map: authorLower -> Set(types)
+        const typeMap = new Map();
+
+        const addTypeFor = (name, t) => {
+          const key = normName(name);
+          const tt = normType(t);
+          if (!key || !tt) return;
+          if (!typeMap.has(key)) typeMap.set(key, new Set());
+          typeMap.get(key).add(tt);
+        };
+
+        if (userItemsSnap.exists()) {
+          userItemsSnap.forEach((ch) => {
+            const v = ch.val();
+            const name = v?.author || v?.artist || "";
+            const t = v?.type || "";
+            if (name && t) addTypeFor(name, t);
+          });
+        }
+
+        // 2) Supplér med egne "favourite items" (som vi allerede har hydreret)
+        for (const it of items) {
+          if (it?.author && it?.type) addTypeFor(it.author, it.type);
+        }
+
+        // 3) Split listen
+        const books = [];
+        const artists = [];
+        for (const displayName of favAuthorNames) {
+          const key = normName(displayName);
+          const seen = typeMap.get(key) || new Set();
+
+          const isBook = seen.has("book");
+          const isArtist = seen.has("album") || seen.has("vinyl");
+
+          if (isBook) books.push(displayName);
+          if (isArtist) artists.push(displayName);
+        }
+
+        if (!alive) return;
+
+        // sort case-insensitive for stabil visning
+        const ciSort = (a, b) => a.toLowerCase().localeCompare(b.toLowerCase());
+        setFavBookAuthors(books.sort(ciSort));
+        setFavArtists(artists.sort(ciSort));
+      } catch (e) {
+        console.warn("author type derive failed", e);
+        // Fall back: vis ingenting hvis vi ikke kan udlede type
+        setFavBookAuthors([]);
+        setFavArtists([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [favAuthorNames, items]);
 
   // ---- Search + filter ----
   const onSearchChange = (e) => {
@@ -283,32 +365,66 @@ export default function Favourites() {
         {searching && <span className="search-hint">Searching…</span>}
       </div>
 
-      {/* Favourite authors as tags (DB only) */}
-      {favAuthors.length > 0 && (
-        <>
-          <h3 className="aftersignup-subtitle-collection">
-            My favourite authors
-          </h3>
-          <ul className="item-tags item-tags-wrap">
-            {favAuthors.map((a) => (
-              <li
-                key={a}
-                className={`tag ${authorFilter === a ? "active" : ""}`}
-                title={a}
+      {/* Favourite Authors split */}
+      {(favBookAuthors.length > 0 || favArtists.length > 0) && (
+        <section>
+          {favBookAuthors.length > 0 && (
+            <>
+              <h3 className="aftersignup-subtitle-collection">
+                My favourite authors
+              </h3>
+              <ul className="item-tags item-tags-wrap">
+                {favBookAuthors.map((a) => (
+                  <li
+                    key={`book-${a}`}
+                    className={`tag ${authorFilter === a ? "active" : ""}`}
+                    title={a}
+                  >
+                    <Link
+                      to={`/authors/${encodeURIComponent(a.toLowerCase())}`}
+                      onClick={() => setAuthorFilter(null)}
+                      className="author-link"
+                      aria-label={`Open author ${a}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      {a}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {favArtists.length > 0 && (
+            <>
+              <h3
+                className="aftersignup-subtitle-collection"
+                style={{ marginTop: 15 }}
               >
-                <Link
-                  to={`/authors/${encodeURIComponent(a.toLowerCase())}`}
-                  onClick={() => setAuthorFilter(null)} // optional: ryd filter
-                  className="author-link"
-                  aria-label={`Open author ${a}`}
-                  style={{ color: "inherit", textDecoration: "none" }}
-                >
-                  {a}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
+                My favourite artists
+              </h3>
+              <ul className="item-tags item-tags-wrap">
+                {favArtists.map((a) => (
+                  <li
+                    key={`artist-${a}`}
+                    className={`tag ${authorFilter === a ? "active" : ""}`}
+                    title={a}
+                  >
+                    <Link
+                      to={`/authors/${encodeURIComponent(a.toLowerCase())}`}
+                      onClick={() => setAuthorFilter(null)}
+                      className="author-link"
+                      aria-label={`Open artist ${a}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      {a}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
       )}
 
       {/* Items by type */}

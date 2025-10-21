@@ -1,11 +1,21 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router";
 import { db, auth } from "../../firebase-config";
-import { ref as dbRef, onValue, off } from "firebase/database";
+import { ref as dbRef, onValue, off, get } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 
-/* ---------- helper ---------- */
+/* ---------- helpers ---------- */
+function normType(t) {
+  const x = (t || "").toLowerCase();
+  if (x === "books") return "book";
+  if (x === "albums") return "album";
+  if (x === "vinyl") return "vinyl";
+  if (x === "book") return "book";
+  if (x === "album") return "album";
+  return x;
+}
+
 function pickImage(val) {
   if (!val || typeof val !== "object") return "";
   const candidates = [
@@ -21,14 +31,62 @@ function pickImage(val) {
   return u.replace(/^["']|["']$/g, "");
 }
 
+// Hydrér manglende type fra /items og /users/{uid}/collectionItems
+async function hydrateTypesForWishlist(list, uid) {
+  const typeMap = new Map();
+
+  // 1) Globalt katalog
+  try {
+    const itemsSnap = await get(dbRef(db, "items"));
+    if (itemsSnap.exists()) {
+      itemsSnap.forEach((ch) => {
+        const v = ch.val();
+        const t = normType(v?.type);
+        if (t) typeMap.set(ch.key, t);
+      });
+    }
+  } catch (e) {
+    console.warn("wishlist hydrate: global items read failed", e);
+  }
+
+  // 2) Brugerens egne collectionItems (hvis det findes)
+  try {
+    const userItemsSnap = await get(dbRef(db, `users/${uid}/collectionItems`));
+    if (userItemsSnap.exists()) {
+      userItemsSnap.forEach((ch) => {
+        const v = ch.val();
+        const sourceId = v?.sourceItemId || v?.itemId;
+        const t = normType(v?.type);
+        if (sourceId && t && !typeMap.has(sourceId)) {
+          typeMap.set(sourceId, t);
+        }
+      });
+    }
+  } catch (e) {
+    console.warn("wishlist hydrate: user collectionItems read failed", e);
+  }
+
+  // 3) Returnér ny liste med udfyldt type hvor muligt
+  return list.map((it) => {
+    const t = normType(it.type);
+    if (t) return it; // allerede sat
+    const fromMap = typeMap.get(it.itemId);
+    return fromMap ? { ...it, type: fromMap } : it;
+  });
+}
+
 /* ---------- component ---------- */
 export default function WishlistPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+
+  // search + filter
   const [q, setQ] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,29 +103,41 @@ export default function WishlistPage() {
 
     const ref = dbRef(db, `users/${uid}/wishlist`);
 
-    const listener = (snap) => {
+    const listener = async (snap) => {
       if (!alive) return;
+
       if (!snap.exists()) {
         setItems([]);
         setLoading(false);
         return;
       }
 
-      const list = [];
+      const base = [];
       snap.forEach((ch) => {
         const val = ch.val();
         if (!val || typeof val !== "object") return;
-        list.push({
+        base.push({
           id: ch.key,
           itemId: val.itemId || val.sourceItemId || ch.key,
           title: val.title || "Untitled",
           author: val.author || "",
           coverImage: pickImage(val),
+          type: normType(val.type || val.itemType || val.kind || ""), // kan være tom
           createdAt: Number(val.createdAt || 0),
         });
       });
 
+      // Hydrér manglende typer
+      let list = base;
+      try {
+        list = await hydrateTypesForWishlist(base, uid);
+      } catch (e) {
+        console.warn("wishlist hydrate types failed", e);
+      }
+
       list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if (!alive) return;
       setItems(list);
       setLoading(false);
     };
@@ -81,11 +151,18 @@ export default function WishlistPage() {
 
   const visibleItems = useMemo(() => {
     const term = (q || "").trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((it) =>
-      `${it.title || ""} ${it.author || ""}`.toLowerCase().includes(term)
-    );
-  }, [items, q]);
+
+    return items.filter((it) => {
+      const matchesSearch = !term
+        ? true
+        : `${it.title || ""} ${it.author || ""}`.toLowerCase().includes(term);
+
+      const t = normType(it.type);
+      const matchesType = filterType === "all" ? true : t === filterType;
+
+      return matchesSearch && matchesType;
+    });
+  }, [items, q, filterType]);
 
   function onSearchChange(e) {
     const val = e.target.value;
@@ -115,7 +192,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <main style={{ paddingBottom: 130 }}>
+    <main className="add-item-page" style={{ paddingBottom: 130 }}>
       {/* Topbar */}
       <div>
         <button
@@ -128,10 +205,24 @@ export default function WishlistPage() {
         <h1 className="page-title">Wishlist</h1>
       </div>
 
-      {/* Search */}
+      {/* Filter + Search (samme classes som AddItem) */}
       <div className="search-container">
+        <div className="filter-buttons" style={{ marginTop: -30 }}>
+          {["all", "book", "album", "vinyl"].map((type) => (
+            <button
+              key={type}
+              className={`filter-btn ${filterType === type ? "active" : ""}`}
+              onClick={() => setFilterType(type)}
+              aria-pressed={filterType === type}
+            >
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          ))}
+        </div>
+
         <input
           type="search"
+          value={q}
           onChange={onSearchChange}
           placeholder="Search in wishlist"
           className="search-input"
@@ -144,7 +235,9 @@ export default function WishlistPage() {
       {visibleItems.length === 0 ? (
         <div>
           <h3 className="aftersignup-subtitle">
-            Your wishlist is empty. Add some favourites!
+            {items.length === 0
+              ? "Your wishlist is empty. Add some favourites!"
+              : "No items match this filter."}
           </h3>
         </div>
       ) : (
