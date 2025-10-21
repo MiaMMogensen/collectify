@@ -1529,3 +1529,98 @@ a:hover {
   right: 10px;
   top: 8px;
 }
+
+.page-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem;
+}
+
+.account-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  color: var(--white);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  opacity: 0.95;
+  padding: 4px 6px 4px 0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.account-settings-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.profilepage-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profile-section {
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.profile-field {
+  padding: 2px 6px 8px 0;
+  display: flex;
+  gap: 15px;
+}
+
+.field-label {
+  display: block;
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field-value {
+  font-size: 15px;
+  color: var(--white);
+  font-weight: 500;
+}
+
+.profilepage-wishlist-link {
+  display: flex;
+  align-items: center;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.profilepage-wishlist-link::after {
+  content: "›";
+  font-size: 25px;
+  color: var(--muted);
+  margin-left: 6px;
+  transform: translateY(1px);
+}
+
+.actions-col {
+  margin-top: 22px;
+}
+
+.profilepage-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.profile-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.profile-btns button {
+  width: 324px;
+}
