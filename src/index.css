@@ -1446,6 +1446,16 @@ a:hover {
   border-radius: 6px;
 }
 
+.title-row .fav-star {
+  padding: 0px;
+  padding-top: 20px;
+  margin-left: -15px;
+}
+
+.title-row .page-title {
+  margin-top: 30px;
+}
+
 /* default (ikke favorit) — lidt afdæmpet */
 
 /* fyldt favorit — fremhæv */

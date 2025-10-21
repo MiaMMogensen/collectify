@@ -24,6 +24,7 @@ import WishlistPage from "./pages/WishlistPage";
 import AuthorPage from "./pages/AuthorPage";
 import EditCollectionPage from "./pages/EditCollectionPage";
 import AccountSettings from "./pages/AccountSettings";
+import EditCategoryPage from "./pages/EditCategoryPage";
 
 export default function App() {
   useEffect(() => {
@@ -73,6 +74,10 @@ export default function App() {
           <Route
             path="/users/:uid/collections/:collectionId/edit"
             element={<EditCollectionPage />}
+          />
+          <Route
+            path="/users/:uid/collections/:collectionId/categories/:categoryId/edit"
+            element={<EditCategoryPage />}
           />
           <Route path="*" element={<Navigate to="/" />} />
           <Route path="/account-settings" element={<AccountSettings />} />

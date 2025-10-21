@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router";
 import { auth, db } from "../../firebase-config";
 import { ref, child, get } from "firebase/database";
 import Nav from "../components/Nav";
+import settingsIcon from "../assets/icons/edit.svg";
 
 /* ---------- helpers ---------- */
 function normType(t) {
@@ -390,12 +391,9 @@ export default function CollectionPage() {
 
   return (
     <main style={{ paddingBottom: 130 }}>
-      <div className="title-row" style={{ marginLeft: 15 }}>
-        <h1 className="page-title detail-page-item-title">
-          {col?.title || "Untitled collection"}
-        </h1>
+      <div className="title-row">
+        <h1 className="page-title">{col?.title || "Untitled collection"}</h1>
 
-        {/* EDIT-KNAP — samme struktur og CSS som fav-star */}
         <Link
           to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/edit`}
           className="fav-star empty" // bruger eksisterende stil
@@ -403,9 +401,10 @@ export default function CollectionPage() {
           title="Edit collection"
         >
           <img
-            src="/icons/edit.svg" // ← læg evt. et simpelt pencil-ikon her
-            alt="edit collection"
-            className="fav-icon"
+            src={settingsIcon}
+            alt=""
+            className="inline-icon"
+            aria-hidden="true"
           />
         </Link>
       </div>

@@ -4,6 +4,7 @@ import { auth, db } from "../../firebase-config";
 import { ref, child, get, update } from "firebase/database"; // <-- tilføjet update
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
+import settingsIcon from "../assets/icons/edit.svg";
 
 /* ---------- helpers (samme stil som CollectionPage) ---------- */
 function normType(t) {
@@ -375,7 +376,24 @@ export default function CategoryPage() {
         >
           <img src={backArrow} alt="Back" className="back-arrow" />
         </button>
-        <h1 className="page-title">{cat?.title || "Untitled category"}</h1>
+        <div className="title-row">
+          <h1 className="page-title">{cat?.title || "Untitled category"}</h1>
+          <Link
+            to={`/users/${
+              uid || auth.currentUser?.uid
+            }/collections/${collectionId}/categories/${categoryId}/edit`}
+            className="fav-star empty"
+            aria-label="Edit category"
+            title="Edit category"
+          >
+            <img
+              src={settingsIcon}
+              alt=""
+              className="inline-icon"
+              aria-hidden="true"
+            />
+          </Link>
+        </div>
       </div>
 
       <div className="search-container">
