@@ -5,8 +5,7 @@ import {
   sendPasswordResetEmail,
   signInWithPopup,
 } from "firebase/auth";
-import { auth, googleProvider, db } from "../../firebase-config";
-import { ref, child, get } from "firebase/database";
+import { auth, googleProvider } from "../../firebase-config"; // fjernet db
 import Google from "../assets/icons/google.svg";
 
 export default function LogInd() {
@@ -17,38 +16,14 @@ export default function LogInd() {
 
   const navigate = useNavigate();
 
-  async function redirectToFirstCollection(uid) {
-    try {
-      const colSnap = await get(child(ref(db), `users/${uid}/collections`));
-      if (!colSnap.exists()) {
-        console.warn("Ingen collections fundet for bruger:", uid);
-        navigate("/"); // fallback til forside
-        return;
-      }
-
-      const collections = colSnap.val();
-      const firstId = Object.keys(collections)[0];
-      if (!firstId) {
-        navigate("/");
-        return;
-      }
-
-      navigate(`/users/${uid}/collections/${firstId}`);
-    } catch (err) {
-      console.error("Kunne ikke hente collections:", err);
-      navigate("/");
-    }
-  }
-
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const cred = await signInWithEmailAndPassword(auth, email.trim(), pw);
-      const uid = cred.user?.uid;
-      if (uid) await redirectToFirstCollection(uid);
-      else navigate("/");
+      await signInWithEmailAndPassword(auth, email.trim(), pw);
+      // Efter login -> HomePage
+      navigate("/homepage", { replace: true }); // skift til "/home" hvis din route er sådan
     } catch (err) {
       setError(mapFirebaseError(err));
     } finally {
@@ -60,10 +35,9 @@ export default function LogInd() {
     setError("");
     setLoading(true);
     try {
-      const cred = await signInWithPopup(auth, googleProvider);
-      const uid = cred.user?.uid;
-      if (uid) await redirectToFirstCollection(uid);
-      else navigate("/");
+      await signInWithPopup(auth, googleProvider);
+      // Efter login -> HomePage
+      navigate("/", { replace: true }); // skift til "/home" hvis din route er sådan
     } catch (err) {
       setError(mapFirebaseError(err));
     } finally {
@@ -115,9 +89,11 @@ export default function LogInd() {
             required
           />
         </div>
+
         <a href="#" onClick={handleForgot} className="forgot-link">
           Forgot password?
         </a>
+
         {error && <p className="login-error">{error}</p>}
 
         <button className="get-started-btn" type="submit" disabled={loading}>
