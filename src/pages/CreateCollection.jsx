@@ -116,7 +116,7 @@ export default function CreateCollection() {
   }
 
   return (
-    <main>
+    <main style={{ paddingBottom: 130 }}>
       <h1 className="page-title">My next collection</h1>
 
       <form onSubmit={handleSubmit} noValidate>

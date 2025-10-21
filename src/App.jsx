@@ -22,6 +22,7 @@ import HomePage from "./pages/HomePage";
 import DetailPage from "./pages/DetailPage";
 import WishlistPage from "./pages/WishlistPage";
 import AuthorPage from "./pages/AuthorPage";
+import EditCollectionPage from "./pages/EditCollectionPage";
 
 export default function App() {
   useEffect(() => {
@@ -68,6 +69,10 @@ export default function App() {
           />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/authors/:authorKey" element={<AuthorPage />} />
+          <Route
+            path="/users/:uid/collections/:collectionId/edit"
+            element={<EditCollectionPage />}
+          />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
