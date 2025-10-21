@@ -119,7 +119,7 @@ export default function ProfilePage() {
       style={{ paddingBottom: 140 }}
     >
       <div className="profilepage-header">
-        <h1 className="page-title detail-page-item-title">Profile</h1>
+        <h1 className="page-title profile-page-item-title">Profile</h1>
       </div>
 
       {error && (

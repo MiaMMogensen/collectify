@@ -1624,3 +1624,12 @@ a:hover {
 .profile-btns button {
   width: 324px;
 }
+
+.save-settings-btn {
+  margin-top: 10px;
+}
+
+.profile-page-item-title {
+  margin-top: 0;
+  margin-left: 0px;
+}
