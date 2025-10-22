@@ -1,4 +1,3 @@
-// ProfilePage.jsx
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { auth, db } from "../../firebase-config";
@@ -11,7 +10,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [userDb, setUserDb] = useState(null); // data from /users/{uid}
+  const [userDb, setUserDb] = useState(null);
   const [error, setError] = useState("");
   const [processing, setProcessing] = useState(false);
 

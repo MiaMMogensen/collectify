@@ -27,6 +27,7 @@ import AdminPendingItems from "./pages/AdminPendingItems";
 import EditCollectionPage from "./pages/EditCollectionPage";
 import AccountSettings from "./pages/AccountSettings";
 import EditCategoryPage from "./pages/EditCategoryPage";
+import RemoveItemsFromCategoryPage from "./pages/RemoveItemsFromCategoryPage";
 
 export default function App() {
   // parse stored value safely to boolean; default false
@@ -111,6 +112,10 @@ export default function App() {
             <Route
               path="/users/:uid/collections/:collectionId/categories/:categoryId/edit"
               element={<EditCategoryPage />}
+            />
+            <Route
+              path="/users/:uid/collections/:collectionId/categories/:categoryId/remove-items"
+              element={<RemoveItemsFromCategoryPage />}
             />
           </Routes>
         ) : (

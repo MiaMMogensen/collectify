@@ -1,4 +1,3 @@
-// DetailPage.jsx
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { db, auth } from "../../firebase-config";
@@ -28,17 +27,13 @@ export default function DetailPage() {
 
   const navigate = useNavigate();
 
-  // wishlist state (true <=> findes i den LOGGEDE brugers wishlist)
   const [isInWishlist, setIsInWishlist] = useState(false);
 
-  // favourites state
   const [isItemFavorited, setIsItemFavorited] = useState(false);
   const [isAuthorFavorited, setIsAuthorFavorited] = useState(false);
 
-  // ref til at holde nuværende snapshot-compare-id (sourceItemId eller id)
   const comparableIdRef = useRef(null);
 
-  // --- helper fetch functions (uændret) ---
   async function fetchGlobalItem(globalId) {
     if (!globalId) return null;
     const snap = await get(dbRef(db, `items/${globalId}`));
@@ -66,7 +61,6 @@ export default function DetailPage() {
     return found;
   }
 
-  // --- load item and compute comparableId (uændret logik med samme effect som før) ---
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -142,7 +136,6 @@ export default function DetailPage() {
           }
         }
 
-        // global fallback
         const globalItem = await fetchGlobalItem(id);
         if (globalItem) {
           if (mounted) setItem(globalItem);
@@ -150,7 +143,6 @@ export default function DetailPage() {
             globalItem.sourceItemId || globalItem.id || null;
           if (mounted) setLoading(false);
 
-          // tjek om current user har en kopi i sin collection (for delete-knap)
           if (currentUid) {
             const userCopy = await findUserCollectionItemBySource(
               currentUid,
@@ -164,7 +156,6 @@ export default function DetailPage() {
           return;
         }
 
-        // fallback via collections/categories mapping (som tidligere)
         if (routeUid && collectionId) {
           try {
             const categoriesSnap = await get(
@@ -221,13 +212,13 @@ export default function DetailPage() {
         }
 
         if (mounted) {
-          setError("Item ikke fundet.");
+          setError("Item not found.");
           setLoading(false);
         }
       } catch (err) {
         console.error("DetailPage fetch error:", err);
         if (mounted) {
-          setError("Der skete en fejl ved hentning af item.");
+          setError("There was an error fetching the item.");
           setLoading(false);
         }
       }
@@ -238,12 +229,10 @@ export default function DetailPage() {
     };
   }, [id, routeUid, collectionId]);
 
-  // --- live listeners: wishlist + favourites (items + authors) for den loggede bruger ---
   useEffect(() => {
     const unsubscribers = [];
 
     const attachListenersForUser = (uid) => {
-      // wishlist listener (eksisterende logic)
       const wlRef = dbRef(db, `users/${uid}/wishlist`);
       const wlListener = (snap) => {
         const compId = comparableIdRef.current;
@@ -268,7 +257,6 @@ export default function DetailPage() {
       onValue(wlRef, wlListener);
       unsubscribers.push(() => off(wlRef, "value", wlListener));
 
-      // favourites -> items
       const favItemsRef = dbRef(db, `users/${uid}/favourites/items`);
       const favItemsListener = (snap) => {
         const compId = comparableIdRef.current;
@@ -280,7 +268,7 @@ export default function DetailPage() {
           setIsItemFavorited(false);
           return;
         }
-        // if there's a child with key == compId OR a child with sourceItemId/itemId == compId
+
         let found = false;
         snap.forEach((ch) => {
           if (ch.key === compId) {
@@ -298,7 +286,6 @@ export default function DetailPage() {
       onValue(favItemsRef, favItemsListener);
       unsubscribers.push(() => off(favItemsRef, "value", favItemsListener));
 
-      // favourites -> authors
       const favAuthorsRef = dbRef(db, `users/${uid}/favourites/authors`);
       const favAuthorsListener = (snap) => {
         const authorName = (item?.author || "").toString().trim();
@@ -310,7 +297,7 @@ export default function DetailPage() {
           setIsAuthorFavorited(false);
           return;
         }
-        // key is encodedAuthor; attempt both enc and decode checks
+
         const encoded = encodeURIComponent(authorName.toLowerCase());
         let found = false;
         snap.forEach((ch) => {
@@ -338,20 +325,19 @@ export default function DetailPage() {
     return () => {
       unsubscribers.forEach((fn) => fn());
     };
-  }, [item /* we rely on comparableIdRef inside callbacks */]);
+  }, [item]);
 
-  // --- Add to wishlist (samme som før, men kortet ned) ---
   async function handleAddToWishlist() {
     setError("");
     setProcessing(true);
     try {
       const user = auth.currentUser;
       if (!user?.uid)
-        throw new Error("Du skal være logget ind for at tilføje til wishlist.");
+        throw new Error("You need to be logged in to add to wishlist.");
       const uid = user.uid;
 
       const compId = comparableIdRef.current || item?.id || item?.sourceItemId;
-      if (!compId) throw new Error("Kunne ikke bestemme item-id.");
+      if (!compId) throw new Error("Could not determine item ID.");
 
       const wishlistSnap = await get(dbRef(db, `users/${uid}/wishlist`));
       if (wishlistSnap.exists()) {
@@ -389,33 +375,30 @@ export default function DetailPage() {
       setProcessing(false);
     } catch (err) {
       console.error("Add to wishlist error:", err);
-      setError(err?.message || "Kunne ikke tilføje til wishlist.");
+      setError(err?.message || "Could not add to wishlist.");
       setProcessing(false);
     }
   }
 
-  // --- Remove from wishlist: find matching wishlist entry and remove it ---
   async function handleRemoveFromWishlist() {
     setError("");
     setProcessing(true);
     try {
       const user = auth.currentUser;
       if (!user?.uid)
-        throw new Error("Du skal være logget ind for at fjerne fra wishlist.");
+        throw new Error("You need to be logged in to remove from wishlist.");
       const uid = user.uid;
 
       const compId = comparableIdRef.current || item?.id || item?.sourceItemId;
-      if (!compId) throw new Error("Kunne ikke bestemme item-id.");
+      if (!compId) throw new Error("Could not determine item ID.");
 
       const wishlistSnap = await get(dbRef(db, `users/${uid}/wishlist`));
       if (!wishlistSnap.exists()) {
-        // nothing to remove
         setIsInWishlist(false);
         setProcessing(false);
         return;
       }
 
-      // find all matching keys (usually one) and remove them
       const removals = [];
       wishlistSnap.forEach((ch) => {
         const val = ch.val();
@@ -425,13 +408,11 @@ export default function DetailPage() {
       });
 
       if (removals.length === 0) {
-        // not found
         setIsInWishlist(false);
         setProcessing(false);
         return;
       }
 
-      // perform removals (can remove multiple matches just in case)
       const updates = {};
       removals.forEach((key) => {
         updates[`users/${uid}/wishlist/${key}`] = null;
@@ -443,34 +424,31 @@ export default function DetailPage() {
       setProcessing(false);
     } catch (err) {
       console.error("Remove from wishlist error:", err);
-      setError(err?.message || "Kunne ikke fjerne fra wishlist.");
+      setError(err?.message || "Could not remove from wishlist.");
       setProcessing(false);
     }
   }
 
-  // --- Toggle favourite item ---
   async function handleToggleFavouriteItem() {
     setError("");
     setProcessing(true);
     try {
       const user = auth.currentUser;
       if (!user?.uid)
-        throw new Error("Du skal være logget ind for at ændre favoritter.");
+        throw new Error("You need to be logged in to change favourites.");
       const uid = user.uid;
 
       const compId = comparableIdRef.current || item?.id || item?.sourceItemId;
-      if (!compId) throw new Error("Kunne ikke bestemme item-id for fav.");
+      if (!compId) throw new Error("Could not determine item ID.");
 
       const favPath = `users/${uid}/favourites/items/${compId}`;
       const favRef = dbRef(db, favPath);
 
       const snap = await get(favRef);
       if (snap.exists()) {
-        // remove favourite
         await remove(favRef);
         setIsItemFavorited(false);
       } else {
-        // set favourite (gem et payload med info)
         const payload = {
           id: compId,
           itemId: compId,
@@ -487,23 +465,22 @@ export default function DetailPage() {
       setProcessing(false);
     } catch (err) {
       console.error("Toggle favourite item error:", err);
-      setError(err?.message || "Kunne ikke opdatere favorit for item.");
+      setError(err?.message || "Could not update favourite for item.");
       setProcessing(false);
     }
   }
 
-  // --- Toggle favourite author ---
   async function handleToggleFavouriteAuthor() {
     setError("");
     setProcessing(true);
     try {
       const user = auth.currentUser;
       if (!user?.uid)
-        throw new Error("Du skal være logget ind for at ændre favoritter.");
+        throw new Error("You need to be logged in to change favourites.");
       const uid = user.uid;
 
       const authorName = (item?.author || "").toString().trim();
-      if (!authorName) throw new Error("Ingen author tilgængelig.");
+      if (!authorName) throw new Error("No author found.");
 
       const key = encodeURIComponent(authorName.toLowerCase());
       const favPath = `users/${uid}/favourites/authors/${key}`;
@@ -511,7 +488,6 @@ export default function DetailPage() {
 
       const snap = await get(favRef);
       if (snap.exists()) {
-        // remove
         await remove(favRef);
         setIsAuthorFavorited(false);
       } else {
@@ -527,19 +503,18 @@ export default function DetailPage() {
       setProcessing(false);
     } catch (err) {
       console.error("Toggle favourite author error:", err);
-      setError(err?.message || "Kunne ikke opdatere favorit for author.");
+      setError(err?.message || "Could not update favourite for author.");
       setProcessing(false);
     }
   }
 
-  // --- Delete from collection (uændret) ---
   async function handleDeleteFromCollection() {
     setProcessing(true);
     try {
       const user = auth.currentUser;
-      if (!user?.uid) throw new Error("Du skal være logget ind.");
+      if (!user?.uid) throw new Error("You must be logged in.");
       const uid = user.uid;
-      if (!userCollectionItemId) throw new Error("Intet item-id fundet.");
+      if (!userCollectionItemId) throw new Error("No item ID found.");
 
       await remove(
         dbRef(db, `users/${uid}/collectionItems/${userCollectionItemId}`)
@@ -570,7 +545,7 @@ export default function DetailPage() {
       setProcessing(false);
     } catch (err) {
       console.error("Delete from collection error:", err);
-      setError(err?.message || "Kunne ikke slette item fra collection.");
+      setError(err?.message || "Could not delete item from collection.");
       setProcessing(false);
     }
   }
@@ -592,7 +567,6 @@ export default function DetailPage() {
     );
   }
 
-  // render
   const title = item?.title || "Untitled";
   const author = item?.author || "Unknown";
   const cover = item?.images?.cover || item?.coverImage || "/placeholder.png";
@@ -620,15 +594,14 @@ export default function DetailPage() {
           <div className="title-row">
             <h1 className="page-title detail-page-item-title">{title}</h1>
 
-            {/* STJERNE TIL ITEM */}
             <button
               className={`fav-star ${isItemFavorited ? "filled" : "empty"}`}
               onClick={handleToggleFavouriteItem}
               aria-pressed={isItemFavorited}
               title={
                 isItemFavorited
-                  ? "Fjern item fra favoritter"
-                  : "Tilføj item til favoritter"
+                  ? "Remove item from favourites"
+                  : "Add item to favourites"
               }
               disabled={processing}
             >
@@ -642,7 +615,6 @@ export default function DetailPage() {
           <div className="author-row">
             <div className="item-author">{author}</div>
 
-            {/* STJERNE TIL AUTHOR */}
             <button
               className={`fav-star author ${
                 isAuthorFavorited ? "filled" : "empty"
@@ -651,8 +623,8 @@ export default function DetailPage() {
               aria-pressed={isAuthorFavorited}
               title={
                 isAuthorFavorited
-                  ? "Fjern author fra favoritter"
-                  : "Tilføj author til favoritter"
+                  ? "Remove author from favourites"
+                  : "Add author to favourites"
               }
               disabled={processing}
             >
@@ -696,7 +668,7 @@ export default function DetailPage() {
                     onClick={handleDeleteFromCollection}
                     disabled={processing}
                   >
-                    {processing ? "Sletter…" : "Delete"}
+                    {processing ? "Deleting…" : "Delete"}
                   </button>
                 ) : (
                   <button
@@ -714,8 +686,8 @@ export default function DetailPage() {
                   >
                     {processing
                       ? isInWishlist
-                        ? "Fjerner…"
-                        : "Tilføjer…"
+                        ? "Removing…"
+                        : "Adding…"
                       : isInWishlist
                       ? "Remove from wishlist"
                       : "Add to wishlist"}

@@ -27,7 +27,6 @@ export default function AddItem() {
       .trim()
       .toLowerCase();
 
-  // Hent alle items og filtrer på client-side
   const fetchAllAndFilter = useCallback(async (term, typeFilter = "all") => {
     const snap = await get(dbRef(db, "items"));
     const items = [];
@@ -59,7 +58,6 @@ export default function AddItem() {
     });
   }, []);
 
-  // Debounced search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!q || q.trim() === "") {
