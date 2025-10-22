@@ -157,7 +157,7 @@ export default function AuthorPage() {
       ) : (
         rows.map(([t, list]) => (
           <section key={t}>
-            <div className="hscroll-strip no-scrollbar">
+            <div className="hscroll-strip author-page-items">
               {list.map((it) => {
                 // determine owned status
                 const compId = it.id;
