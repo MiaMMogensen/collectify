@@ -168,6 +168,7 @@ export default function HomePage() {
       setLoadingWish(false);
       return;
     }
+
     const refWish = ref(db, `users/${uid}/wishlist`);
     const listener = (snap) => {
       if (!snap.exists()) {
@@ -175,9 +176,12 @@ export default function HomePage() {
         setLoadingWish(false);
         return;
       }
+
       const list = [];
       snap.forEach((ch) => {
         const val = ch.val() || {};
+        if (ch.key === "_placeholder") return; // 👈 IGNORER _placeholder
+
         list.push({
           id: ch.key,
           itemId: val.itemId || ch.key,
@@ -187,10 +191,12 @@ export default function HomePage() {
           createdAt: Number(val.createdAt || 0),
         });
       });
+
       list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setWishlist(list);
       setLoadingWish(false);
     };
+
     onValue(refWish, listener);
     return () => off(refWish, "value", listener);
   }, [uid]);
