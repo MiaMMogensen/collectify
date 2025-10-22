@@ -1643,3 +1643,14 @@ a:hover {
   margin-top: 0;
   margin-left: 0px;
 }
+
+.author-page-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin: 0 15px;
+}
+
+.author-page-items .collection-card {
+  width: 98%;
+}
