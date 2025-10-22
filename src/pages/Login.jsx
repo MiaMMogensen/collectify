@@ -5,7 +5,7 @@ import {
   sendPasswordResetEmail,
   signInWithPopup,
 } from "firebase/auth";
-import { auth, googleProvider } from "../../firebase-config"; // fjernet db
+import { auth, googleProvider } from "../../firebase-config";
 import Google from "../assets/icons/google.svg";
 
 export default function LogInd() {

@@ -1,4 +1,3 @@
-// AdminPendingItems.jsx
 import { useEffect, useState } from "react";
 import {
   ref as dbRef,
@@ -25,7 +24,6 @@ export default function AdminPendingItems() {
   const [pendingItems, setPendingItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState({});
   const [expandedId, setExpandedId] = useState(null);
-  // formState: { [itemId]: { description, tagsText, coverUrl } }
   const [formState, setFormState] = useState({});
 
   // Hent alle pending items
@@ -44,7 +42,6 @@ export default function AdminPendingItems() {
     };
   }, []);
 
-  // DEBUG: tjek om user er admin (valgfri)
   useEffect(() => {
     (async () => {
       const user = auth.currentUser;
@@ -61,7 +58,6 @@ export default function AdminPendingItems() {
     })();
   }, []);
 
-  // Helper: opdater lokal formState for et item
   const setField = (itemId, field, value) => {
     setFormState((prev) => ({
       ...prev,
@@ -72,7 +68,6 @@ export default function AdminPendingItems() {
     }));
   };
 
-  // Approve: skriv item med ekstra felter til brugerens collection og slet pending
   const approveItem = async (item) => {
     if (!item?.id) return alert("Item is missing an ID!");
     if (!VALID_TYPES.includes(item.type)) {
@@ -83,7 +78,6 @@ export default function AdminPendingItems() {
     setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
 
     try {
-      // Hent admin-udfyldte værdier (kan være undefined)
       const local = formState[itemId] || {};
       const description = (local.description || "").trim();
       const tagsText = (local.tagsText || "").trim();
@@ -94,11 +88,10 @@ export default function AdminPendingItems() {
             .filter(Boolean)
         : [];
 
-      // Cover image: brug admin-supplied URL hvis gyldig, ellers brug eksisterende item.coverImage eller tom string
       let coverUrl = "";
       if (local.coverUrl && local.coverUrl.trim() !== "") {
         if (!isValidHttpsUrl(local.coverUrl)) {
-          throw new Error("Cover image URL skal være en gyldig https:// URL");
+          throw new Error("Cover image URL needs to be a valid https:// URL.");
         }
         coverUrl = local.coverUrl.trim();
       } else if (item.coverImage) {
@@ -107,9 +100,6 @@ export default function AdminPendingItems() {
 
       const now = serverTimestamp();
 
-      // i stedet for at skrive under collections/{type}/items/*
-      // opretter vi en entry under users/{creatorUid}/collectionItems/{newId}
-      // (så det matcher dit eksisterende collectionItems-setup)
       const userCollectionRef = dbRef(
         db,
         `users/${item.createdBy}/collectionItems`
@@ -119,7 +109,7 @@ export default function AdminPendingItems() {
 
       const userCollectionPayload = {
         id: newUserItemId,
-        sourceItemId: itemId, // refererer til det globale item
+        sourceItemId: itemId,
         title: (item.title || "").trim(),
         author: (item.author || "").trim(),
         coverImage: coverUrl || item.coverImage || null,
@@ -129,13 +119,11 @@ export default function AdminPendingItems() {
       };
 
       await set(newUserItemRef, userCollectionPayload);
-      // (valgfrit) behold en _placeholder under collectionItems ligesom andre steder
       await set(
         dbRef(db, `users/${item.createdBy}/collectionItems/_placeholder`),
         true
       );
 
-      // --- skriv fladt globalt item så din search komponent finder det ---
       const flatGlobalPath = `items/${itemId}`;
       const existingGlobalSnap = await get(dbRef(db, flatGlobalPath));
 
@@ -166,7 +154,6 @@ export default function AdminPendingItems() {
       // slet fra pendingItems
       await set(dbRef(db, `pendingItems/${itemId}`), null);
 
-      // opdatér lokal UI
       setPendingItems((prev) => prev.filter((it) => it.id !== itemId));
       setFormState((prev) => {
         const copy = { ...prev };
@@ -178,7 +165,7 @@ export default function AdminPendingItems() {
     } catch (err) {
       console.error("Approve error:", err);
       alert(
-        "Noget gik galt ved godkendelsen. Tjek database-rules og admin-access. Fejl: " +
+        "Something went wrong with the approval. Check database-rules and admin-access. Error: " +
           (err?.message || err)
       );
     } finally {
@@ -198,7 +185,7 @@ export default function AdminPendingItems() {
     } catch (err) {
       console.error("Reject error:", err);
       alert(
-        "Noget gik galt ved afvisningen. Tjek database-rules og admin-access."
+        "Something went wrong with the rejection. Check database-rules and admin-access."
       );
     } finally {
       setLoadingItems((prev) => ({ ...prev, [itemId]: false }));

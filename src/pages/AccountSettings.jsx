@@ -28,7 +28,7 @@ export default function AccountSettings() {
 
         const user = auth.currentUser;
         if (!user) {
-          setError("Du skal være logget ind.");
+          setError("You must be logged in.");
           setLoading(false);
           return;
         }
@@ -45,7 +45,7 @@ export default function AccountSettings() {
       } catch (e) {
         console.error(e);
         if (!mounted.current) return;
-        setError("Kunne ikke hente brugerdata.");
+        setError("Could not fetch user data.");
         setLoading(false);
       }
     })();
@@ -64,7 +64,7 @@ export default function AccountSettings() {
       setError("");
 
       const user = auth.currentUser;
-      if (!user) throw new Error("Ikke logget ind.");
+      if (!user) throw new Error("Not logged in.");
       const uid = user.uid;
 
       // 1) Opdater username i Realtime DB
@@ -82,17 +82,16 @@ export default function AccountSettings() {
         await updatePassword(user, password);
       }
 
-      alert("Profil opdateret!");
-      navigate(-1); // tilbage til profil
+      alert("Profile updated!");
+      navigate(-1);
     } catch (e) {
       console.error(e);
-      // Kendte fejl: auth/requires-recent-login
       if (e.code === "auth/requires-recent-login") {
         setError(
-          "Af sikkerhedsårsager skal du logge ind igen (reauthenticate) før du kan ændre email eller password."
+          "Because of security reasons, you need to log in again (reauthenticate) before changing email or password."
         );
       } else {
-        setError(e.message || "Kunne ikke gemme ændringer.");
+        setError(e.message || "Could not save changes.");
       }
     } finally {
       setProcessing(false);

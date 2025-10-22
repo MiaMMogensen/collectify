@@ -1,4 +1,3 @@
-// AuthorPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { db, auth } from "../../firebase-config";
@@ -6,7 +5,6 @@ import { ref as dbRef, get } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 
-/* small helper to pick image (reuse from your favourites) */
 function pickImage(val) {
   if (!val || typeof val !== "object") return "";
   const candidates = [
@@ -34,11 +32,11 @@ function normType(t) {
 }
 
 export default function AuthorPage() {
-  const { authorKey } = useParams(); // encoded lowercased author
+  const { authorKey } = useParams();
   const navigate = useNavigate();
 
-  const [items, setItems] = useState([]); // all items for this author
-  const [ownedMap, setOwnedMap] = useState(() => new Set()); // set of compIds user owns
+  const [items, setItems] = useState([]);
+  const [ownedMap, setOwnedMap] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -48,7 +46,6 @@ export default function AuthorPage() {
       setLoading(true);
       setErr("");
       try {
-        // 1) load all global items and pick those matching author (case-insens)
         const allSnap = await get(dbRef(db, "items"));
         const all = allSnap.exists() ? allSnap.val() || {} : {};
 
@@ -73,7 +70,6 @@ export default function AuthorPage() {
           }
         });
 
-        // 2) fetch current user's collectionItems to determine ownership
         const currentUid = auth.currentUser?.uid;
         const owned = new Set();
 
@@ -85,7 +81,6 @@ export default function AuthorPage() {
             const obj = userSnap.val() || {};
             Object.entries(obj).forEach(([k, v]) => {
               if (!v) return;
-              // mark both by sourceItemId and by collection item id
               if (v.sourceItemId) owned.add(String(v.sourceItemId));
               owned.add(String(k));
             });
@@ -99,7 +94,7 @@ export default function AuthorPage() {
       } catch (e) {
         console.error("AuthorPage load error", e);
         if (!alive) return;
-        setErr("Kunne ikke hente items for forfatter.");
+        setErr("Could not load items for author.");
         setLoading(false);
       }
     })();
@@ -159,7 +154,6 @@ export default function AuthorPage() {
           <section key={t}>
             <div className="hscroll-strip author-page-items">
               {list.map((it) => {
-                // determine owned status
                 const compId = it.id;
                 const owned = ownedMap.has(String(compId));
                 return (
