@@ -394,6 +394,60 @@ export default function DetailPage() {
     }
   }
 
+  // --- Remove from wishlist: find matching wishlist entry and remove it ---
+  async function handleRemoveFromWishlist() {
+    setError("");
+    setProcessing(true);
+    try {
+      const user = auth.currentUser;
+      if (!user?.uid)
+        throw new Error("Du skal være logget ind for at fjerne fra wishlist.");
+      const uid = user.uid;
+
+      const compId = comparableIdRef.current || item?.id || item?.sourceItemId;
+      if (!compId) throw new Error("Kunne ikke bestemme item-id.");
+
+      const wishlistSnap = await get(dbRef(db, `users/${uid}/wishlist`));
+      if (!wishlistSnap.exists()) {
+        // nothing to remove
+        setIsInWishlist(false);
+        setProcessing(false);
+        return;
+      }
+
+      // find all matching keys (usually one) and remove them
+      const removals = [];
+      wishlistSnap.forEach((ch) => {
+        const val = ch.val();
+        if (val?.sourceItemId === compId || val?.itemId === compId) {
+          removals.push(ch.key);
+        }
+      });
+
+      if (removals.length === 0) {
+        // not found
+        setIsInWishlist(false);
+        setProcessing(false);
+        return;
+      }
+
+      // perform removals (can remove multiple matches just in case)
+      const updates = {};
+      removals.forEach((key) => {
+        updates[`users/${uid}/wishlist/${key}`] = null;
+      });
+
+      await update(dbRef(db), updates);
+
+      setIsInWishlist(false);
+      setProcessing(false);
+    } catch (err) {
+      console.error("Remove from wishlist error:", err);
+      setError(err?.message || "Kunne ikke fjerne fra wishlist.");
+      setProcessing(false);
+    }
+  }
+
   // --- Toggle favourite item ---
   async function handleToggleFavouriteItem() {
     setError("");
@@ -649,13 +703,21 @@ export default function DetailPage() {
                     className={`wishlist-btn login-btn ${
                       isInWishlist ? "added" : ""
                     }`}
-                    onClick={!isInWishlist ? handleAddToWishlist : undefined}
-                    disabled={processing || isInWishlist}
+                    onClick={
+                      processing
+                        ? undefined
+                        : isInWishlist
+                        ? handleRemoveFromWishlist
+                        : handleAddToWishlist
+                    }
+                    disabled={processing}
                   >
-                    {isInWishlist
-                      ? "Added to wishlist"
-                      : processing
-                      ? "Tilføjer…"
+                    {processing
+                      ? isInWishlist
+                        ? "Fjerner…"
+                        : "Tilføjer…"
+                      : isInWishlist
+                      ? "Remove from wishlist"
                       : "Add to wishlist"}
                   </button>
                 )}
