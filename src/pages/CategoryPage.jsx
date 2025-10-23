@@ -359,7 +359,10 @@ export default function CategoryPage() {
           </h3>
         </div>
       ) : (
-        <div className="category-grid">
+        <div
+          className="hscroll-strip author-page-items"
+          style={{ marginTop: 10 }}
+        >
           {visibleItems.map((it) => (
             <article
               key={it.id}

@@ -403,7 +403,10 @@ export default function RemoveItemsFromCategoryPage() {
           Ingen items fundet i denne kategori.
         </p>
       ) : (
-        <div className="category-grid">
+        <div
+          className="hscroll-strip author-page-items"
+          style={{ marginTop: 10 }}
+        >
           {visibleItems.map((it) => {
             const isSel = selected.has(it.id);
             return (
