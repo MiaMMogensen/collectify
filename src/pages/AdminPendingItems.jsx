@@ -193,7 +193,7 @@ export default function AdminPendingItems() {
   };
 
   return (
-    <div className="admin-page">
+    <div>
       <h1 className="page-title">Pending Items for Approval</h1>
 
       {pendingItems.length === 0 ? (
@@ -227,7 +227,7 @@ export default function AdminPendingItems() {
 
                   <div className="expand-btn-wrap">
                     <button
-                      className="btn expand-btn"
+                      className="btn"
                       onClick={() =>
                         setExpandedId((prev) =>
                           prev === itemId ? null : itemId

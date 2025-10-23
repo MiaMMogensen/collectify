@@ -228,7 +228,7 @@ export default function WishlistPage() {
           className="search-input"
           aria-label="Search wishlist items"
         />
-        {searching && <span className="search-hint">Searching…</span>}
+        {searching && <span>Searching…</span>}
       </div>
 
       {/* Items */}

@@ -104,7 +104,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="profilepage-container">
+      <main>
         <h1 className="page-title">Profile</h1>
         <p>Loading profile…</p>
         <Nav />
@@ -113,10 +113,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main
-      className="page-container profile-page"
-      style={{ paddingBottom: 140 }}
-    >
+    <main className="page-container" style={{ paddingBottom: 140 }}>
       <div className="profilepage-header">
         <h1 className="page-title profile-page-item-title">Profile</h1>
       </div>
@@ -128,14 +125,9 @@ export default function ProfilePage() {
       )}
 
       <section className="profile-section">
-        <Link to="/account-settings" className="btn small account-settings-btn">
+        <Link to="/account-settings" className="btn account-settings-btn">
           <span className="profilepage-title">Account settings</span>
-          <img
-            src={settingsIcon}
-            alt=""
-            className="inline-icon"
-            aria-hidden="true"
-          />
+          <img src={settingsIcon} alt="" aria-hidden="true" />
         </Link>
 
         <div className="profile-field">

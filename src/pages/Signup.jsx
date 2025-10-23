@@ -195,7 +195,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="login-page">
+    <div>
       <h2 className="login-title">Sign up</h2>
       <p className="login-subtitle">
         Already have an account? <Link to="/login">Login</Link>

@@ -331,12 +331,7 @@ export default function CategoryPage() {
             aria-label="Edit category"
             title="Edit category"
           >
-            <img
-              src={settingsIcon}
-              alt=""
-              className="inline-icon"
-              aria-hidden="true"
-            />
+            <img src={settingsIcon} alt="" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -349,7 +344,7 @@ export default function CategoryPage() {
           className="search-input"
           aria-label="Search items in category"
         />
-        {searching && <span className="search-hint">Searching…</span>}
+        {searching && <span>Searching…</span>}
       </div>
 
       {visibleItems.length === 0 ? (

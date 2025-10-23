@@ -254,7 +254,7 @@ export default function CreateCategory() {
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="login-inputs login-form collection-inputs">
+        <div className="login-inputs login-form">
           <p>Category name</p>
           <input
             type="text"
@@ -283,7 +283,7 @@ export default function CreateCategory() {
           />
 
           {coverUrl ? (
-            <div className="preview">
+            <div>
               <p>Preview:</p>
               <img
                 src={coverUrl}

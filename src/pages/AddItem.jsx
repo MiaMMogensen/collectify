@@ -157,7 +157,7 @@ export default function AddItem() {
         </Link>
       </div>
 
-      <section className="search-section">
+      <section>
         <div className="search-container">
           <div className="filter-buttons">
             {["all", "book", "album", "vinyl"].map((type) => (

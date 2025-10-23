@@ -144,7 +144,7 @@ export default function CreateCollection() {
           </button>
         </div>
 
-        <div className="login-inputs login-form collection-inputs">
+        <div className="login-inputs login-form">
           <p>Name collection</p>
           <input
             type="text"
@@ -174,7 +174,7 @@ export default function CreateCollection() {
           />
 
           {coverUrl ? (
-            <div className="preview">
+            <div>
               <p>Preview:</p>
               <img
                 src={coverUrl}

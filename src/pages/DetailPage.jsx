@@ -645,8 +645,8 @@ export default function DetailPage() {
             </ul>
           )}
 
-          <div className="media-row">
-            <div className="media-left">
+          <div>
+            <div>
               {cover ? (
                 <img
                   className="item-cover gradient-frame"
@@ -658,13 +658,13 @@ export default function DetailPage() {
               )}
             </div>
 
-            <div className="media-right">
+            <div>
               <p className="item-description">{description}</p>
 
               <div className="item-actions">
                 {canDelete ? (
                   <button
-                    className="wishlist-btn delete-btn login-btn"
+                    className="wishlist-btn login-btn"
                     onClick={handleDeleteFromCollection}
                     disabled={processing}
                   >

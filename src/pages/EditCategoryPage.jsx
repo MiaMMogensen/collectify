@@ -212,7 +212,7 @@ export default function EditCategoryPage() {
   }
 
   return (
-    <main className="login-page" style={{ paddingBottom: 130 }}>
+    <main style={{ paddingBottom: 130 }}>
       <div>
         <button
           onClick={() => navigate(-1)}

@@ -61,7 +61,7 @@ export default function LogInd() {
   }
 
   return (
-    <div className="login-page">
+    <div>
       <h2 className="login-title">Login</h2>
       <p className="login-subtitle">
         Don&lsquo;t have an account? <Link to="/signup">Sign up</Link>

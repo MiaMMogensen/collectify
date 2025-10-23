@@ -400,12 +400,7 @@ export default function CollectionPage() {
           aria-label="Edit collection"
           title="Edit collection"
         >
-          <img
-            src={settingsIcon}
-            alt=""
-            className="inline-icon"
-            aria-hidden="true"
-          />
+          <img src={settingsIcon} alt="" aria-hidden="true" />
         </Link>
       </div>
 
@@ -430,7 +425,7 @@ export default function CollectionPage() {
               className="search-input"
               aria-label="Search items"
             />
-            {searching && <span className="search-hint">Searching…</span>}
+            {searching && <span>Searching…</span>}
           </div>
 
           {/* *** DYNAMISK RÆKKEFØLGE *** */}

@@ -371,7 +371,7 @@ export default function RemoveItemsFromCategoryPage() {
   return (
     <main className="add-to-cat" style={{ paddingBottom: 140 }}>
       <div>
-        <div className="landing-text has-back">
+        <div className="landing-text">
           <button
             onClick={() => navigate(-1)}
             className="back-arrow-link"
@@ -395,7 +395,7 @@ export default function RemoveItemsFromCategoryPage() {
           className="search-input"
           aria-label="Search items"
         />
-        {searching && <span className="search-hint">Searching…</span>}
+        {searching && <span>Searching…</span>}
       </div>
 
       {visibleItems.length === 0 ? (
@@ -444,7 +444,7 @@ export default function RemoveItemsFromCategoryPage() {
         </div>
       )}
 
-      <div className="select-action-bar" style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 16 }}>
         {err && <p className="error-text">{err}</p>}
         <button
           className="get-started-btn create-collection-btn"

@@ -362,7 +362,7 @@ export default function Favourites() {
           className="search-input"
           aria-label="Search favourites"
         />
-        {searching && <span className="search-hint">Searching…</span>}
+        {searching && <span>Searching…</span>}
       </div>
 
       {/* Favourite Authors split */}
@@ -383,7 +383,6 @@ export default function Favourites() {
                     <Link
                       to={`/authors/${encodeURIComponent(a.toLowerCase())}`}
                       onClick={() => setAuthorFilter(null)}
-                      className="author-link"
                       aria-label={`Open author ${a}`}
                       style={{ color: "inherit", textDecoration: "none" }}
                     >

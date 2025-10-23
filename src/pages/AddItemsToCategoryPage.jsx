@@ -374,7 +374,7 @@ export default function AddItemsToCategoryPage() {
   return (
     <main className="add-to-cat" style={{ paddingBottom: 140 }}>
       <div>
-        <div className="landing-text has-back">
+        <div className="landing-text">
           <button
             onClick={() => navigate(-1)}
             className="back-arrow-link"
@@ -397,7 +397,7 @@ export default function AddItemsToCategoryPage() {
           className="search-input"
           aria-label="Search items"
         />
-        {searching && <span className="search-hint">Searching…</span>}
+        {searching && <span>Searching…</span>}
       </div>
 
       {visibleItems.length === 0 ? (
@@ -450,7 +450,7 @@ export default function AddItemsToCategoryPage() {
         </div>
       )}
 
-      <div className="select-action-bar">
+      <div>
         <button
           className="get-started-btn create-collection-btn"
           onClick={onSubmit}

@@ -134,7 +134,7 @@ export default function SubmitPage() {
           ))}
         </div>
 
-        <div className="login-inputs login-form collection-inputs">
+        <div className="login-inputs login-form">
           <label>Navn på item</label>
           <input
             type="text"

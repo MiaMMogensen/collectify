@@ -37,6 +37,11 @@ html {
   color: transparent;
 }
 
+a {
+  color: var(--white);
+  text-decoration: none;
+}
+
 /* ---------- Typography ---------- */
 h1 {
   line-height: 1.1;
@@ -48,17 +53,6 @@ h2,
 h3 {
   font-weight: 500;
   letter-spacing: 0.1px;
-}
-
-/* ---------- Link Styling ---------- */
-a {
-  color: var(--green);
-  text-decoration: none;
-  transition: 0.5s;
-}
-
-a:hover {
-  color: var(--dark-green);
 }
 
 /* ---------- Bund-Navbar (grid for stabile mellemrum) ---------- */
@@ -243,163 +237,6 @@ a:hover {
   }
 }
 
-/* ---------- Page Styling ---------- */
-.page {
-  animation: fadeIn 0.5s;
-  padding: 140px 2em 2em;
-}
-
-/* ---------- Container Styling ---------- */
-.container {
-  max-width: 700px;
-  margin: auto;
-}
-
-/* ---------- Grid Container Styling ---------- */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1em;
-}
-
-@media (min-width: 600px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (min-width: 992px) {
-  .grid {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-
-.grid > .post-card {
-  cursor: pointer;
-}
-
-/* ---------- Grid Filter Styling ---------- */
-.grid-filter {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 1em;
-  padding: 1em;
-  background-color: var(--white);
-  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.25);
-  border-radius: 8px;
-  margin: 0 0 1em;
-  align-items: center;
-}
-
-.grid-filter select {
-  width: 100%;
-  padding: 1.1rem;
-}
-
-.grid-filter input,
-.grid-filter select {
-  margin: 1em 0 0;
-}
-
-/* ---------- Post Card Styling ---------- */
-.post-card {
-  box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.25);
-  padding: 1.5em;
-  background-color: var(--white);
-  transition: 0.5s;
-  animation: fadeIn 0.5s;
-  cursor: pointer;
-  border-radius: 10px;
-}
-
-.post-card:hover {
-  box-shadow: 0 8px 16px 0 var(--green);
-}
-
-.post-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.post-card h2 {
-  margin: 0.5em 0 0;
-}
-
-.post-card .title {
-  margin: 0;
-}
-
-/* ---------- Avatar Styling ---------- */
-.avatar {
-  display: flex;
-  align-items: center;
-  margin: 0 0 1.2em;
-  text-align: left;
-}
-
-.avatar span {
-  margin: 0 0 0 1em;
-}
-
-.avatar h3,
-.avatar p {
-  margin: 0;
-  line-height: 1.2;
-}
-
-.post-card .avatar img {
-  max-width: 50px;
-  max-height: 50px;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-/* ---------- User Page Styling ---------- */
-#user-page .post-card > img {
-  height: auto;
-}
-
-#user-page .btns {
-  padding: 1em 0;
-}
-
-/* ---------- Login Form Styling ---------- */
-#sign-in-page,
-#sign-up-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 85vh;
-}
-
-.error-message {
-  color: var(--text-color-danger);
-  margin-top: 10px;
-  grid-column: 2;
-}
-
-.hide {
-  display: none;
-}
-
-.image-preview {
-  cursor: pointer;
-}
-
-/* ---------- Animations ---------- */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
 /* Gradient-rammen (genbruger din gradient) */
 .gradient-frame {
   display: inline-block;
@@ -570,14 +407,6 @@ a:hover {
 }
 
 /* ---------- LOGIN PAGE ---------- */
-#login-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 85vh;
-  background: var(--black);
-  color: var(--white);
-}
 
 .login-form {
   width: 100%;
@@ -1358,7 +1187,6 @@ a:hover {
   width: 164px;
   height: 247px;
   object-fit: cover;
-  border-radius: 8px;
   flex-shrink: 0;
   border-radius: 12px; /* yderste radius */
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
