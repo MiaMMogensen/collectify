@@ -241,7 +241,10 @@ export default function WishlistPage() {
           </h3>
         </div>
       ) : (
-        <div className="category-grid">
+        <div
+          className="hscroll-strip author-page-items"
+          style={{ marginTop: 10 }}
+        >
           {visibleItems.map((it) => (
             <article
               key={it.id}

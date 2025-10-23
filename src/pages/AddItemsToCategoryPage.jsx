@@ -403,7 +403,10 @@ export default function AddItemsToCategoryPage() {
       {visibleItems.length === 0 ? (
         <p className="aftersignup-subtitle">No items found.</p>
       ) : (
-        <div className="category-grid">
+        <div
+          className="hscroll-strip author-page-items"
+          style={{ marginTop: 10 }}
+        >
           {visibleItems.map((it) => {
             const isSel = selected.has(it.id);
             const isDisabled = alreadyInCat.has(it.id);

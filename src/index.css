@@ -400,6 +400,15 @@ a:hover {
   }
 }
 
+/* Gradient-rammen (genbruger din gradient) */
+.gradient-frame {
+  display: inline-block;
+  padding: 4px; /* gradient “border” thickness */
+  border-radius: 33px;
+  background: linear-gradient(to bottom, #ff86b4, #e99aff);
+  width: 90%; /* center + cap max width */
+}
+
 /* ---------- Landing Page ---------- */
 
 .landing-page-title {
@@ -419,14 +428,7 @@ a:hover {
   text-align: center;
 }
 
-.gradient-frame {
-  display: inline-block; /* tilpasser sig billedets bredde */
-  padding: 4px; /* tykkelsen på “kanten” */
-  border-radius: 33px; /* yderste radius */
-  background: linear-gradient(to bottom, #ff86b4, #e99aff);
-  width: 90%;
-}
-
+/* Knapper (uændret) */
 .landing-page-btns {
   display: flex;
   justify-content: center;
@@ -475,6 +477,96 @@ a:hover {
   height: 20px;
   filter: brightness(0) invert(1); /* sikrer at pilen forbliver hvid, selv hvis SVG'en er sort */
   transition: transform 0.2s ease;
+}
+
+/* Wrapper: centrer og tillad lodret scroll (vi håndterer swipe selv) */
+.landing-page-slider {
+  position: relative;
+  margin-inline: auto;
+  max-width: 980px;
+  touch-action: pan-y;
+}
+
+/* Området inden i gradienten der holder billederne */
+.slider-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  width: 90%;
+  margin-inline: auto;
+  height: 400px;
+  background: linear-gradient(#353535, #353535) padding-box,
+    linear-gradient(180deg, #ff86b4 0%, #e99aff 100%) border-box;
+  border: 3px solid transparent;
+}
+
+/* Hvert slide fylder hele boksen og kan flyttes vandret ved swipe */
+.slide {
+  position: absolute;
+  inset: 0; /* udfylder hele slider-frame */
+  border-radius: 30px;
+  display: flex;
+  place-items: center;
+  will-change: transform;
+  transition: transform 350ms ease; /* smooth snap når man slipper */
+}
+
+/* Når vi er i drag: fjern transition så billedet følger fingeren 1:1 */
+.landing-page-slider.dragging .slide {
+  transition: none !important;
+}
+
+.slide-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Skjul evt. gamle pile hvis de findes */
+.slider-nav {
+  display: none !important;
+}
+
+/* Dots under slideren (neutral stil) */
+.slider-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+.dot.active {
+  background: #fff;
+}
+
+/* CTA kun synlig på sidste slide (styres via .show i JSX) */
+.landing-page-btns-slider {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.landing-page-btns-slider.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* (valgfri) små mobile tweaks */
+@media (max-width: 768px) {
+  .slider-frame {
+    min-height: 260px;
+  }
 }
 
 /* ---------- LOGIN PAGE ---------- */
@@ -1118,69 +1210,6 @@ a:hover {
   font-size: 16px;
 }
 
-/* ---------- CATEGORY GRID (fælles) ---------- */
-/* ---------- CategoryPage matcher AddItemsToCategoryPage ---------- */
-
-/* Samme grid (2 kolonner, spacing, padding) */
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 20px;
-  padding: 0 16px; /* pænere margin på mobil */
-  width: 100%;
-}
-
-/* Kortene i grid */
-.category-grid .collection-card {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  padding: 0;
-}
-
-/* Samme coverramme med gradient */
-.category-grid .collection-card .cover-frame {
-  padding: 2px;
-  border-radius: 15px;
-  background: linear-gradient(to bottom, #ff86b4, #e99aff);
-}
-
-/* Ens cover-dimensioner */
-.category-grid .cover-wrap {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  aspect-ratio: 1 / 1; /* brug 3 / 4 hvis du vil have bogformat i stedet */
-  width: 100%;
-}
-
-.category-grid .cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Samme tekststil som add-items-siden */
-.category-grid .item-title {
-  margin: 8px 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.category-grid .item-sub {
-  margin: 2px 4px 0;
-  font-size: 12px;
-  opacity: 0.8;
-}
-
 /* Titel + sideoverskrift skal have stort forbogstav */
 .category-title,
 .page-title {
@@ -1255,9 +1284,8 @@ a:hover {
 .category-grid .cover-wrap,
 .add-to-cat .collection-card .cover-wrap {
   position: relative;
-  border-radius: 12px;
+  border-radius: 15px;
   overflow: hidden;
-  aspect-ratio: 1 / 1; /* ens højde/bredde som CategoryPage */
   width: 100%;
 }
 
@@ -1653,4 +1681,49 @@ a:hover {
 
 .author-page-items .collection-card {
   width: 98%;
+}
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--gradient, linear-gradient(to bottom, #ff86b4, #e99aff));
+  animation: gradientFloat 4s ease infinite;
+  transition: opacity 0.8s ease;
+  opacity: 1;
+}
+
+.splash-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes gradientFloat {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+.splash-title {
+  color: white;
+  font-weight: 800;
+  font-size: 3rem;
+  letter-spacing: 2px;
+  opacity: 0;
+  animation: fadeIn 1s ease forwards 0.3s;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
 }
