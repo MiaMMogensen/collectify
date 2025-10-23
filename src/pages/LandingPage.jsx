@@ -2,9 +2,9 @@ import { useRef, useState } from "react";
 import { Link } from "react-router";
 import SplashScreen from "../components/SplashScreen";
 
-import img1 from "../assets/img/slide1.jpg";
-import img2 from "../assets/img/slide2.jpg";
-import img3 from "../assets/img/slide3.jpg";
+import img1 from "../assets/img/slide1.JPG";
+import img2 from "../assets/img/slide2.JPG";
+import img3 from "../assets/img/slide3.JPG";
 import img4 from "../assets/img/slide4.png";
 import arrowIcon from "../assets/img/arrow.svg";
 
