@@ -34,7 +34,7 @@ export default function ProfilePage() {
         }
       } catch (err) {
         console.error("Could not load user DB data", err);
-        if (alive) setError("Kunne ikke hente profildata.");
+        if (alive) setError("Could not load profile data.");
       } finally {
         if (alive) setLoading(false);
       }
@@ -50,11 +50,10 @@ export default function ProfilePage() {
     setError("");
     try {
       await signOut(auth);
-      // optional: clear local storage or other app state
-      navigate("/"); // go to landing or login
+      navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
-      setError("Kunne ikke logge ud. Prøv igen.");
+      setError("Could not log out. Try again.");
     } finally {
       setProcessing(false);
     }
@@ -62,40 +61,31 @@ export default function ProfilePage() {
 
   async function handleDeleteAccount() {
     if (!uid) return;
-    // confirm
-    const ok = window.confirm(
-      "Er du sikker på at du vil slette din konto? Denne handling fjerner din konto og dine brugerdata permanent."
-    );
+    const ok = window.confirm("Are you sure you want to delete your account?");
     if (!ok) return;
 
     setProcessing(true);
     setError("");
 
     try {
-      // 1) fjern brugerdata i Realtime DB under /users/{uid}
       await remove(dbRef(db, `users/${uid}`));
 
-      // 2) forsøg at slette Auth-brugeren
-      // note: deleteUser kræver at brugeren har en "recent login" — ellers kastes en fejl
       await deleteUser(auth.currentUser);
 
-      // hvis vi når hertil er kontoen slettet — redirect til landing
       navigate("/");
     } catch (err) {
       console.error("Delete account error", err);
-      // håndter kendt fejl: kræver gen-autentifikation
-      // firebase auth fejlnavn: auth/requires-recent-login
+
       const msg =
         err?.code === "auth/requires-recent-login"
-          ? "Af sikkerhedsårsager skal du logge ind igen (reauthenticate) før du kan slette kontoen. Log ind igen og prøv igen."
-          : "Kunne ikke slette konto. Prøv igen eller kontakt support.";
+          ? "For security reasons, you need to log in again (reauthenticate) before you can delete your account. Please log in again and try again."
+          : "Could not delete account. Please try again or contact support.";
       setError(msg);
     } finally {
       setProcessing(false);
     }
   }
 
-  // Data to display: prefer DB username, fallback to auth.displayName
   const displayUsername =
     (userDb && (userDb.username || userDb.displayName)) ||
     user?.displayName ||
@@ -148,12 +138,10 @@ export default function ProfilePage() {
 
       <section className="profile-section">
         <div className="actions-col">
-          {/* wishlist button (moved to bottom visually) */}
           <Link to="/wishlist" className="profilepage-wishlist-link">
             <span>Wishlist</span>
           </Link>
 
-          {/* Log ud */}
           <div className="profile-btns">
             <button
               className="login-btn"
@@ -161,18 +149,17 @@ export default function ProfilePage() {
               disabled={processing}
               style={{ marginTop: 12 }}
             >
-              {processing ? "Processing…" : "Log ud"}
+              {processing ? "Processing…" : "Log out"}
             </button>
 
-            {/* Delete account */}
             <button
               className="get-started-btn"
               onClick={handleDeleteAccount}
               disabled={processing}
               style={{ marginTop: 8 }}
-              title="Slet konto permanent"
+              title="Delete your account permanently"
             >
-              {processing ? "Processing…" : "Slet konto"}
+              {processing ? "Processing…" : "Delete account"}
             </button>
           </div>
         </div>
