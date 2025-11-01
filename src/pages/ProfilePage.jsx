@@ -69,9 +69,7 @@ export default function ProfilePage() {
 
     try {
       await remove(dbRef(db, `users/${uid}`));
-
       await deleteUser(auth.currentUser);
-
       navigate("/");
     } catch (err) {
       console.error("Delete account error", err);
