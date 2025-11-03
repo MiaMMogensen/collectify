@@ -4,7 +4,6 @@ import { auth, db } from "../../firebase-config";
 import { ref, get, child, onValue, off } from "firebase/database";
 import Nav from "../components/Nav";
 
-/* ---------- helpers ---------- */
 function normType(t) {
   const x = (t || "").toLowerCase();
   if (x === "books") return "book";
@@ -32,7 +31,6 @@ function pickImage(val) {
   return u.replace(/^["']|["']$/g, "");
 }
 
-/* ---------- component ---------- */
 export default function HomePage() {
   const [username, setUsername] = useState("");
   const [cols, setCols] = useState([]);
@@ -42,7 +40,6 @@ export default function HomePage() {
   const [loadingFav, setLoadingFav] = useState(true);
   const [loadingWish, setLoadingWish] = useState(true);
 
-  // ---- USERNAME ----
   useEffect(() => {
     async function fetchUsername() {
       const user = auth.currentUser;
@@ -63,7 +60,6 @@ export default function HomePage() {
 
   const uid = auth.currentUser?.uid;
 
-  // ---- COLLECTIONS ----
   useEffect(() => {
     if (!uid) {
       setCols([]);
@@ -94,7 +90,6 @@ export default function HomePage() {
     return () => unsub();
   }, [uid]);
 
-  // ---- FAVOURITES (items only) ----
   useEffect(() => {
     if (!uid) {
       setFavItems([]);
@@ -161,7 +156,6 @@ export default function HomePage() {
     return () => off(favRef, "value", listener);
   }, [uid]);
 
-  // ---- WISHLIST ----
   useEffect(() => {
     if (!uid) {
       setWishlist([]);
@@ -203,7 +197,6 @@ export default function HomePage() {
 
   return (
     <main style={{ paddingBottom: 130 }}>
-      {/* Welcome */}
       <section className="landing-container">
         <div className="landing-text">
           <h1 className="page-title">
@@ -212,7 +205,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* My collections */}
       <section>
         <h3
           className="aftersignup-subtitle-collection"
@@ -252,7 +244,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* My favourites */}
       <section>
         <h3 className="aftersignup-subtitle-collection">My favourites</h3>
         {loadingFav ? (
@@ -290,7 +281,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* My wishlist */}
       <section>
         <h3 className="aftersignup-subtitle-collection">My wishlist</h3>
         {loadingWish ? (

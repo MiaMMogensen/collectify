@@ -5,7 +5,6 @@ import { ref as dbRef, get, onValue, off } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 
-/* ---------- helpers ---------- */
 function normType(t) {
   const x = (t || "").toLowerCase();
   if (x === "books") return "book";
@@ -40,7 +39,6 @@ function pickImage(val) {
 }
 const normName = (s) => (s || "").trim().toLowerCase();
 
-/* ---------- component ---------- */
 export default function Favourites() {
   const navigate = useNavigate();
 
@@ -264,7 +262,6 @@ export default function Favourites() {
     };
   }, [favAuthorNames, items]);
 
-  // ---- Search + filter ----
   const onSearchChange = (e) => {
     const val = e.target.value;
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -291,7 +288,6 @@ export default function Favourites() {
     );
   }, [filteredBySearch, authorFilter]);
 
-  // grupper pr. type
   const itemsByType = useMemo(() => {
     const map = new Map();
     for (const it of filtered) {

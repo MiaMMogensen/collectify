@@ -1,4 +1,3 @@
-// RemoveItemsFromCategoryPage.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { auth, db } from "../../firebase-config";
@@ -6,7 +5,6 @@ import { ref, child, get, update } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 
-/* ---------- små helper-funktioner (kopi fra AddItemsToCategoryPage) ---------- */
 function normType(t) {
   const x = (t || "").toLowerCase();
   if (x === "books") return "book";
@@ -148,7 +146,6 @@ async function loadItemsForCollection({ userRoot, collectionId, colType }) {
   return list;
 }
 
-/* ---------- membership på alle formater (kopi) ---------- */
 function isInCat(it, cat) {
   const idStr = String(cat.id);
   const titleStr = String(cat.title || "").toLowerCase();
@@ -184,7 +181,6 @@ function isInCat(it, cat) {
   return false;
 }
 
-/* ---------- component ---------- */
 export default function RemoveItemsFromCategoryPage() {
   const { uid, collectionId, categoryId } = useParams();
   const navigate = useNavigate();
@@ -243,7 +239,6 @@ export default function RemoveItemsFromCategoryPage() {
           colType: normType(colData?.type),
         });
 
-        // keep only items that are actually in the category
         const inCat = listRaw.filter((it) => isInCat(it, catData));
         const filtered = hasAllowed
           ? inCat.filter((it) => normType(it.type) === allowedType)
@@ -302,7 +297,6 @@ export default function RemoveItemsFromCategoryPage() {
   }
 
   const chosen = useMemo(() => {
-    // only allow removal of items that are in the category (safety)
     return [...selected].filter((id) => inCatSet.has(id));
   }, [selected, inCatSet]);
   const selectedCount = chosen.length;
@@ -318,13 +312,11 @@ export default function RemoveItemsFromCategoryPage() {
 
       const updates = {};
 
-      // 1) Fjern reverse-index under kategorien for hvert valgt item
       for (const itemId of chosen) {
         updates[
           `users/${myUid}/collections/${collectionId}/categories/${cat.id}/items/${itemId}`
         ] = null;
 
-        // 2) Fjern kategori-maps på selve item'et
         updates[
           `users/${myUid}/collectionItems/${itemId}/categoryIds/${cat.id}`
         ] = null;
@@ -332,7 +324,6 @@ export default function RemoveItemsFromCategoryPage() {
           `users/${myUid}/collectionItems/${itemId}/categoryNames/${cat.id}`
         ] = null;
 
-        // 3) Hvis I bruger simple single category fields (category/categoryId), ryd dem hvis de peger på denne kategori
         updates[`users/${myUid}/collectionItems/${itemId}/categoryId`] = null;
         updates[`users/${myUid}/collectionItems/${itemId}/category`] = null;
       }
@@ -341,7 +332,6 @@ export default function RemoveItemsFromCategoryPage() {
         await update(ref(db), updates);
       }
 
-      // efter success — gå tilbage til category view
       navigate(
         `/users/${myUid}/collections/${collectionId}/categories/${cat.id}`
       );
@@ -452,7 +442,7 @@ export default function RemoveItemsFromCategoryPage() {
           disabled={selectedCount === 0 || processing}
           aria-disabled={selectedCount === 0 || processing}
         >
-          {processing ? "Fjerner…" : `Remove items (${selectedCount})`}
+          {processing ? "Removing..." : `Remove items (${selectedCount})`}
         </button>
       </div>
 

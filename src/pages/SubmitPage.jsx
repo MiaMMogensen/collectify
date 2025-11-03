@@ -1,4 +1,3 @@
-// SubmitPage.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ref as dbRef, push, set, serverTimestamp } from "firebase/database";
@@ -15,30 +14,30 @@ const sanitize = (raw) =>
 
 const validateName = (n) => {
   const s = sanitize(n);
-  if (!s || s.length < 2) return "Navnet skal være mindst 2 tegn.";
+  if (!s || s.length < 2) return "Name must be at least 2 characters.";
   return null;
 };
 const validateAuthor = (a) => {
   if (!a || String(a).trim().length < 2)
-    return "Indtast forfatter/artist (mindst 2 tegn).";
+    return "Type in author/artist (at least 2 characters).";
   return null;
 };
 const validateLink = (u) => {
   try {
     const s = String(u || "").trim();
-    if (!s) return "Link må ikke være tomt";
+    if (!s) return "Link can't be empty.";
     const url = new URL(s);
-    if (url.protocol !== "https:") return "Link skal starte med https://";
+    if (url.protocol !== "https:") return "Link needs to start with https://";
     return null;
   } catch {
-    return "Link er ikke en gyldig URL";
+    return "Link is not a valid URL.";
   }
 };
 
 export default function SubmitPage() {
   const [name, setName] = useState("");
   const [author, setAuthor] = useState("");
-  const [type, setType] = useState("book"); // "book" | "vinyl" | "album"
+  const [type, setType] = useState("book");
   const [link, setLink] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -51,7 +50,6 @@ export default function SubmitPage() {
     setError("");
     setSuccess("");
 
-    // Valider inputs
     const nameErr = validateName(name);
     if (nameErr) return setError(nameErr);
 
@@ -62,8 +60,7 @@ export default function SubmitPage() {
     if (linkErr) return setError(linkErr);
 
     const user = auth.currentUser;
-    if (!user?.uid)
-      return setError("Du skal være logget ind for at indsende et item.");
+    if (!user?.uid) return setError("You must be logged in to submit an item.");
 
     setLoading(true);
 
@@ -86,30 +83,30 @@ export default function SubmitPage() {
         updatedAt: now,
       };
 
-      // Skriv til pendingItems (populært og simpelt)
+      // Skriv til pendingItems
       await set(newRef, itemData);
 
-      setSuccess("Item indsendt og afventer godkendelse!");
+      setSuccess("Item is now pending and awaiting approval!");
       setName("");
       setAuthor("");
       setLink("");
       setType("book");
 
-      // lille pause før redirect, så brugeren ser succes-beskeden
       setTimeout(() => navigate("/submitsuccess"), 900);
     } catch (err) {
       console.error("SubmitItem error:", err);
 
-      // Gør fejltekst mere brugervenlig for permission-fejl
       if (
         err?.code === "PERMISSION_DENIED" ||
         (err?.message && err.message.toLowerCase().includes("permission"))
       ) {
         setError(
-          "Adgang nægtet: dine sikkerhedsregler tillader ikke denne handling. Tjek database regler eller log ind som korrekt bruger."
+          "Permission denied: your security rules do not allow this action. Check your database rules or log in as the correct user."
         );
       } else {
-        setError(err?.message || "Noget gik galt ved indsendelsen.");
+        setError(
+          err?.message || "Something went wrong while submitting the item."
+        );
       }
     } finally {
       setLoading(false);
@@ -168,7 +165,7 @@ export default function SubmitPage() {
           type="submit"
           disabled={loading}
         >
-          {loading ? "Sender..." : "Submit"}
+          {loading ? "Sending..." : "Submit"}
         </button>
 
         {error && <div style={{ color: "red", marginTop: 12 }}>{error}</div>}

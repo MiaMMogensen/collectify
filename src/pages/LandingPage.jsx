@@ -92,7 +92,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* dots navigation */}
           <div
             className="slider-dots"
             role="tablist"

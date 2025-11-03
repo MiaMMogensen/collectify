@@ -23,7 +23,7 @@ export default function LogInd() {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pw);
       // Efter login -> HomePage
-      navigate("/homepage", { replace: true }); // skift til "/home" hvis din route er sådan
+      navigate("/homepage", { replace: true });
     } catch (err) {
       setError(mapFirebaseError(err));
     } finally {
@@ -36,8 +36,7 @@ export default function LogInd() {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      // Efter login -> HomePage
-      navigate("/", { replace: true }); // skift til "/home" hvis din route er sådan
+      navigate("/", { replace: true });
     } catch (err) {
       setError(mapFirebaseError(err));
     } finally {
@@ -49,12 +48,12 @@ export default function LogInd() {
     e.preventDefault();
     setError("");
     if (!email.trim()) {
-      setError("Indtast din email for at nulstille adgangskoden.");
+      setError("Please enter your email to reset your password.");
       return;
     }
     try {
       await sendPasswordResetEmail(auth, email.trim());
-      setError("🔐 Tjek din indbakke for nulstillingslink.");
+      setError("Password reset email sent.");
     } catch (err) {
       setError(mapFirebaseError(err));
     }
@@ -116,11 +115,11 @@ export default function LogInd() {
 
 function mapFirebaseError(error) {
   const code = error?.code || "";
-  if (code.includes("invalid-email")) return "Ugyldig email.";
-  if (code.includes("user-not-found")) return "Bruger findes ikke.";
-  if (code.includes("wrong-password")) return "Forkert adgangskode.";
+  if (code.includes("invalid-email")) return "Invalid email format.";
+  if (code.includes("user-not-found")) return "User not found.";
+  if (code.includes("wrong-password")) return "Wrong password.";
   if (code.includes("too-many-requests"))
-    return "For mange forsøg – prøv igen senere.";
-  if (code.includes("popup-closed-by-user")) return "Login afbrudt.";
-  return "Noget gik galt. Prøv igen.";
+    return "Too many unsuccessful login attempts. Please try again later.";
+  if (code.includes("popup-closed-by-user")) return "Login cancelled.";
+  return "Something went wrong. Please try again.";
 }
