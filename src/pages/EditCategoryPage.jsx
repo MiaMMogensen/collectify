@@ -5,7 +5,6 @@ import { ref, child, get, update, remove } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 
-/* minimal helper to pull a cover url */
 function pickImage(val) {
   if (!val || typeof val !== "object") return "";
   const candidates = [
@@ -38,7 +37,7 @@ export default function EditCategoryPage() {
 
   const [title, setTitle] = useState("");
   const [coverImage, setCoverImage] = useState("");
-  const [resolvedKey, setResolvedKey] = useState(""); // actual DB key (might differ from categoryId)
+  const [resolvedKey, setResolvedKey] = useState("");
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -57,7 +56,6 @@ export default function EditCategoryPage() {
         }
         const userRoot = `users/${myUid}`;
 
-        // 1) Try direct by key
         const byKeyPath = `${userRoot}/collections/${collectionId}/categories/${categoryId}`;
         const snap = await get(child(ref(db), byKeyPath));
         if (snap.exists()) {
@@ -70,7 +68,6 @@ export default function EditCategoryPage() {
           return;
         }
 
-        // 2) Fallback: scan all and match by key OR inner val.id
         const allPath = `${userRoot}/collections/${collectionId}/categories`;
         const allSnap = await get(child(ref(db), allPath));
         if (!allSnap.exists()) {
@@ -262,10 +259,8 @@ export default function EditCategoryPage() {
           ) : null}
         </div>
 
-        {/* errors */}
         {error && <p className="login-error">{error}</p>}
 
-        {/* actions */}
         <button
           type="button"
           className="login-btn create-btn"

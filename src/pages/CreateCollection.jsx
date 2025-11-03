@@ -8,14 +8,13 @@ export default function CreateCollection() {
   const [name, setName] = useState("");
   const [type, setType] = useState("books");
   const [coverUrl, setCoverUrl] = useState("");
-  const [imgOk, setImgOk] = useState(null); // null | true | false
+  const [imgOk, setImgOk] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const navigate = useNavigate();
 
-  // Bruges KUN til slug/system-id – ikke til title
   const makeSlug = (raw) =>
     String(raw || "")
       .trim()
@@ -33,7 +32,6 @@ export default function CreateCollection() {
   }
 
   function validateUrl(u) {
-    // enkel og stram: kræv https og filtype-indikator (jpg|jpeg|png|webp|gif|svg)
     const re = /^https:\/\/.+\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i;
     return re.test((u || "").trim());
   }
@@ -72,29 +70,24 @@ export default function CreateCollection() {
 
     setLoading(true);
     try {
-      // Opret collection-id
       const collectionsRef = dbRef(db, `users/${uid}/collections`);
       const newRef = push(collectionsRef);
       const collectionId = newRef.key;
       const now = serverTimestamp();
 
-      // Multipath update
       const updates = {};
-      // metadata
       updates[`users/${uid}/collections/${collectionId}/id`] = collectionId;
-      updates[`users/${uid}/collections/${collectionId}/title`] = title; // <-- bevar original
-      updates[`users/${uid}/collections/${collectionId}/slug`] = slug; // <-- renset til system
+      updates[`users/${uid}/collections/${collectionId}/title`] = title;
+      updates[`users/${uid}/collections/${collectionId}/slug`] = slug;
       updates[`users/${uid}/collections/${collectionId}/type`] = type;
       updates[`users/${uid}/collections/${collectionId}/coverImage`] =
         coverUrl.trim();
       updates[`users/${uid}/collections/${collectionId}/createdAt`] = now;
       updates[`users/${uid}/collections/${collectionId}/updatedAt`] = now;
 
-      // valgfri hjælpefelt til søgning/sortering
       updates[`users/${uid}/collections/${collectionId}/title_lower`] =
         title.toLowerCase();
 
-      // sørg for at de tomme grene eksisterer første gang
       updates[`users/${uid}/collectionItems/_placeholder`] = true;
       updates[`users/${uid}/collectionItems/_placeholder`] = null;
 
@@ -105,7 +98,6 @@ export default function CreateCollection() {
       setCoverUrl("");
       setImgOk(null);
 
-      // Redirect (tilpas stien til jeres routing)
       navigate(`/users/${uid}/collections/${collectionId}`);
     } catch (err) {
       console.error("CreateCollection error:", err);
@@ -153,7 +145,6 @@ export default function CreateCollection() {
             onChange={(e) => setName(e.target.value)}
             minLength={3}
             required
-            // fjernet pattern så brugeren kan skrive frit
           />
 
           <label className="cover-image-label">

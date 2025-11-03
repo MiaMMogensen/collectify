@@ -17,7 +17,7 @@ function normType(t) {
   if (x === "books") return "book";
   if (x === "albums") return "album";
   if (x === "vinyls") return "vinyl";
-  return x; // "book" | "album" | "vinyl" | ""
+  return x;
 }
 
 const sanitize = (raw) =>
@@ -36,30 +36,25 @@ function validateName(n) {
 }
 
 function validateUrl(u) {
-  // enkel og stram: kræv https og filtype-indikator (jpg|jpeg|png|webp|gif|svg)
   const re = /^https:\/\/.+\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i;
   return re.test((u || "").trim());
 }
 
 /* ---------- component ---------- */
-
 export default function CreateCategory() {
   const { uid: uidFromRoute, collectionId } = useParams();
   const navigate = useNavigate();
 
-  // Collection kontekst
-  const [colType, setColType] = useState(""); // "book" | "album" | "vinyl"
+  const [colType, setColType] = useState("");
   const [loadingInit, setLoadingInit] = useState(true);
   const [initErr, setInitErr] = useState("");
 
-  // Form state
   const [name, setName] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
-  const [imgOk, setImgOk] = useState(null); // null | true | false
+  const [imgOk, setImgOk] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Hent collection-info (type). Hvis type mangler, forsøg at udlede fra items.
   useEffect(() => {
     let alive = true;
 
@@ -93,7 +88,6 @@ export default function CreateCategory() {
 
         let derivedType = t;
 
-        // fallback: find første items-type hvis collection.type mangler
         if (!derivedType) {
           try {
             const itemsSnap = await get(
@@ -164,7 +158,6 @@ export default function CreateCategory() {
         path: `users/${uid}/collections/${collectionId}/categories`,
       });
 
-      // ⬇️ NESTED MODEL: Opret direkte under collectionen (ingen global + ingen mapping)
       const newRef = push(
         dbRef(db, `users/${uid}/collections/${collectionId}/categories`)
       );
@@ -195,19 +188,16 @@ export default function CreateCategory() {
         `users/${uid}/collections/${collectionId}/categories/${categoryId}/updatedAt`
       ] = now;
 
-      // placeholder første gang
       updates[
         `users/${uid}/collections/${collectionId}/categories/_placeholder`
       ] = true;
 
       await update(dbRef(db), updates);
 
-      // reset
       setName("");
       setCoverUrl("");
       setImgOk(null);
 
-      // tilbage til collection-siden
       navigate(`/users/${uid}/collections/${collectionId}`);
     } catch (err) {
       console.error("CreateCategory error:", err);

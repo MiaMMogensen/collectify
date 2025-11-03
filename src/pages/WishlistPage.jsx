@@ -31,11 +31,9 @@ function pickImage(val) {
   return u.replace(/^["']|["']$/g, "");
 }
 
-// Hydrér manglende type fra /items og /users/{uid}/collectionItems
 async function hydrateTypesForWishlist(list, uid) {
   const typeMap = new Map();
 
-  // 1) Globalt katalog
   try {
     const itemsSnap = await get(dbRef(db, "items"));
     if (itemsSnap.exists()) {
@@ -49,7 +47,6 @@ async function hydrateTypesForWishlist(list, uid) {
     console.warn("wishlist hydrate: global items read failed", e);
   }
 
-  // 2) Brugerens egne collectionItems (hvis det findes)
   try {
     const userItemsSnap = await get(dbRef(db, `users/${uid}/collectionItems`));
     if (userItemsSnap.exists()) {
@@ -66,7 +63,6 @@ async function hydrateTypesForWishlist(list, uid) {
     console.warn("wishlist hydrate: user collectionItems read failed", e);
   }
 
-  // 3) Returnér ny liste med udfyldt type hvor muligt
   return list.map((it) => {
     const t = normType(it.type);
     if (t) return it; // allerede sat
@@ -81,7 +77,6 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // search + filter
   const [q, setQ] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [searching, setSearching] = useState(false);
@@ -122,12 +117,11 @@ export default function WishlistPage() {
           title: val.title || "Untitled",
           author: val.author || "",
           coverImage: pickImage(val),
-          type: normType(val.type || val.itemType || val.kind || ""), // kan være tom
+          type: normType(val.type || val.itemType || val.kind || ""),
           createdAt: Number(val.createdAt || 0),
         });
       });
 
-      // Hydrér manglende typer
       let list = base;
       try {
         list = await hydrateTypesForWishlist(base, uid);
@@ -193,7 +187,6 @@ export default function WishlistPage() {
 
   return (
     <main className="add-item-page" style={{ paddingBottom: 130 }}>
-      {/* Topbar */}
       <div>
         <button
           onClick={() => navigate(-1)}
@@ -205,7 +198,6 @@ export default function WishlistPage() {
         <h1 className="page-title">Wishlist</h1>
       </div>
 
-      {/* Filter + Search (samme classes som AddItem) */}
       <div className="search-container">
         <div className="filter-buttons" style={{ marginTop: -30 }}>
           {["all", "book", "album", "vinyl"].map((type) => (
@@ -231,7 +223,6 @@ export default function WishlistPage() {
         {searching && <span>Searching…</span>}
       </div>
 
-      {/* Items */}
       {visibleItems.length === 0 ? (
         <div>
           <h3 className="aftersignup-subtitle">

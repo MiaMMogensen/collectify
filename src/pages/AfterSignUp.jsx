@@ -12,13 +12,11 @@ export default function LandingPage() {
       const user = auth.currentUser;
       if (!user) return;
 
-      // 1) Try displayName first
       if (user.displayName) {
         setUsername(user.displayName);
         return;
       }
 
-      // 2) Fallback: read from /users/{uid}/username
       try {
         const snap = await get(child(ref(db), `users/${user.uid}/username`));
         if (snap.exists()) {

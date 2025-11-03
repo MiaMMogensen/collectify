@@ -16,7 +16,6 @@ function normType(t) {
   return x;
 }
 
-// Robust pickImage
 function pickImage(val = {}) {
   const read = (x) => {
     if (!x) return "";
@@ -79,7 +78,7 @@ async function loadCategory({ userRoot, collectionId, categoryId }) {
   return {
     id: val.id || categoryId,
     title: val.title || "Untitled",
-    type: normType(val.type || ""), // <— sørg for at vi kan bruge type her
+    type: normType(val.type || ""),
     coverImage: val.coverImage || "",
     createdAt: Number(val.createdAt || 0),
     ...val,
@@ -153,7 +152,6 @@ function capitalizeWords(str = "") {
     .join(" ");
 }
 
-/* ---------- membership på alle formater ---------- */
 function isInCat(it, cat) {
   const idStr = String(cat.id);
   const titleStr = String(cat.title || "").toLowerCase();
@@ -246,19 +244,16 @@ export default function AddItemsToCategoryPage() {
           allowedType = "";
         }
 
-        // Hent items for collection (sætter type fallback til collection-typen)
         const listRaw = await loadItemsForCollection({
           userRoot,
           collectionId,
           colType: normType(colData?.type),
         });
 
-        // **Filter kun de items der matcher allowedType**
         const list = hasAllowed
           ? listRaw.filter((it) => normType(it.type) === allowedType)
-          : listRaw; // vis alt hvis vi ikke med sikkerhed kender typen
+          : listRaw;
 
-        // hvilke items er allerede i denne kategori?
         const pre = new Set(
           list.filter((it) => isInCat(it, catData)).map((it) => it.id)
         );
@@ -326,7 +321,6 @@ export default function AddItemsToCategoryPage() {
 
       const updates = {};
       chosen.forEach((itemId) => {
-        // MULTI-membership: map af categoryIds og (valgfrit) categoryNames
         updates[
           `users/${myUid}/collectionItems/${itemId}/categoryIds/${cat.id}`
         ] = true;
@@ -339,7 +333,7 @@ export default function AddItemsToCategoryPage() {
           `users/${myUid}/collections/${collectionId}/categories/${cat.id}/items/${itemId}`
         ] = true;
 
-        // (valgfrit) ryd evt. tom nested-node
+        // ryd evt. tom nested-node
         updates[`users/${myUid}/collectionItems/${collectionId}/${itemId}`] =
           null;
       });

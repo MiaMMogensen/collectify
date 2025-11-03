@@ -44,28 +44,22 @@ const normName = (s) => (s || "").trim().toLowerCase();
 export default function Favourites() {
   const navigate = useNavigate();
 
-  // Favourite items (hydrated)
   const [items, setItems] = useState([]);
 
-  // Rå navneliste fra DB (uden type)
   const [favAuthorNames, setFavAuthorNames] = useState([]);
 
-  // Afledt split
-  const [favBookAuthors, setFavBookAuthors] = useState([]); // books
-  const [favArtists, setFavArtists] = useState([]); // albums + vinyl
+  const [favBookAuthors, setFavBookAuthors] = useState([]);
+  const [favArtists, setFavArtists] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // søgning
   const [q, setQ] = useState("");
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
 
-  // filter via author-tags (valgfrit hvis I vil aktivere igen)
   const [authorFilter, setAuthorFilter] = useState(null);
 
-  // ---- Load favourite ITEMS (IDs -> hydrate) ----
   useEffect(() => {
     let alive = true;
     setErr("");
@@ -161,7 +155,6 @@ export default function Favourites() {
     };
   }, []);
 
-  // ---- Load favourite AUTHORS (rå navne fra DB – UDEN type) ----
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
@@ -176,7 +169,6 @@ export default function Favourites() {
       const names = new Set();
       snap.forEach((ch) => {
         const val = ch.val();
-        // Accept shapes: true | "Name" | { name/title/displayName/author: "Name" }
         if (val === true) {
           names.add(decodeURIComponent(ch.key || ""));
         } else if (typeof val === "string") {
@@ -203,7 +195,6 @@ export default function Favourites() {
     return () => off(authorsRef, "value", listener);
   }, []);
 
-  // ---- Udled type pr. author via egne collectionItems + fav items ----
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid || favAuthorNames.length === 0) {
@@ -216,12 +207,10 @@ export default function Favourites() {
 
     (async () => {
       try {
-        // 1) Læs alle dine collectionItems (indeholder author + type)
         const userItemsSnap = await get(
           dbRef(db, `users/${uid}/collectionItems`)
         );
 
-        // Byg map: authorLower -> Set(types)
         const typeMap = new Map();
 
         const addTypeFor = (name, t) => {
@@ -241,12 +230,10 @@ export default function Favourites() {
           });
         }
 
-        // 2) Supplér med egne "favourite items" (som vi allerede har hydreret)
         for (const it of items) {
           if (it?.author && it?.type) addTypeFor(it.author, it.type);
         }
 
-        // 3) Split listen
         const books = [];
         const artists = [];
         for (const displayName of favAuthorNames) {
@@ -262,13 +249,11 @@ export default function Favourites() {
 
         if (!alive) return;
 
-        // sort case-insensitive for stabil visning
         const ciSort = (a, b) => a.toLowerCase().localeCompare(b.toLowerCase());
         setFavBookAuthors(books.sort(ciSort));
         setFavArtists(artists.sort(ciSort));
       } catch (e) {
         console.warn("author type derive failed", e);
-        // Fall back: vis ingenting hvis vi ikke kan udlede type
         setFavBookAuthors([]);
         setFavArtists([]);
       }
@@ -341,7 +326,6 @@ export default function Favourites() {
 
   return (
     <main style={{ paddingBottom: 130 }}>
-      {/* Top */}
       <div>
         <button
           onClick={() => navigate(-1)}
@@ -353,7 +337,6 @@ export default function Favourites() {
         <h1 className="page-title">Favourites</h1>
       </div>
 
-      {/* Search */}
       <div className="search-container">
         <input
           type="search"
@@ -365,7 +348,6 @@ export default function Favourites() {
         {searching && <span>Searching…</span>}
       </div>
 
-      {/* Favourite Authors split */}
       {(favBookAuthors.length > 0 || favArtists.length > 0) && (
         <section>
           {favBookAuthors.length > 0 && (
@@ -426,7 +408,6 @@ export default function Favourites() {
         </section>
       )}
 
-      {/* Items by type */}
       {rows.length === 0 ? (
         <div>
           <h3 className="aftersignup-subtitle">No favourite items yet.</h3>

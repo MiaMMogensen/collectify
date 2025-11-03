@@ -83,7 +83,6 @@ export default function EditCollectionPage() {
 
       await update(colRef, payload);
 
-      // Go back to the collection page
       navigate(`/users/${me.uid}/collections/${collectionId}`, {
         replace: true,
       });
@@ -112,14 +111,12 @@ export default function EditCollectionPage() {
 
       const userRoot = `users/${me.uid}`;
 
-      // Paths to delete
       const colRef = child(ref(db), `${userRoot}/collections/${collectionId}`);
       const nestedItemsRef = child(
         ref(db),
         `${userRoot}/collectionItems/${collectionId}`
       );
 
-      // Try both
       const results = await Promise.allSettled([
         remove(colRef),
         remove(nestedItemsRef),
@@ -195,7 +192,6 @@ export default function EditCollectionPage() {
             onChange={(e) => setCoverImage(e.target.value)}
           />
 
-          {/* Preview */}
           {coverImage?.trim() ? (
             <div>
               <p>Preview</p>

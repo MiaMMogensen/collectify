@@ -43,17 +43,15 @@ export default function Signup() {
     return null;
   }
 
-  // Reserve username in the *new* index path
   async function reserveUsernameTx(usernameNorm, uid) {
     const unameRef = ref(db, `userIndex/usernames/${usernameNorm}`);
     const res = await runTransaction(unameRef, (current) => {
-      if (current === null) return uid; // reserve if available
-      return; // conflict
+      if (current === null) return uid;
+      return;
     });
     return res.committed && res.snapshot.val() === uid;
   }
 
-  // Create /users/{uid} + empty branches with placeholders, and store username index
   async function createUserDoc(uid, { username, email }) {
     const now = serverTimestamp();
 
@@ -73,7 +71,6 @@ export default function Signup() {
       [`users/${uid}/wishlist/_placeholder`]: true,
       [`users/${uid}/friends/_placeholder`]: true,
 
-      // username index
       [`userIndex/usernames/${username}`]: uid,
     });
   }
@@ -89,11 +86,9 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // 1) create auth user
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), pw);
       const uid = cred.user.uid;
 
-      // 2) reserve username (NEW path)
       const ok = await reserveUsernameTx(usernameNorm, uid);
       if (!ok) {
         try {
@@ -107,14 +102,12 @@ export default function Signup() {
         throw { code: "username-already-in-use" };
       }
 
-      // 3) reflect username on auth profile (optional)
       try {
         await updateProfile(auth.currentUser, { displayName: usernameNorm });
       } catch (updErr) {
         console.warn("Could not update displayName:", updErr);
       }
 
-      // 4) create user doc + placeholders + index entry
       await createUserDoc(uid, { username: usernameNorm, email: email.trim() });
 
       navigate("/after-signup");
@@ -134,7 +127,6 @@ export default function Signup() {
       const user = cred.user;
       const uid = user.uid;
 
-      // if the user has no username yet, generate + reserve one in the NEW index
       const usersSnap = await get(child(ref(db), `users/${uid}/username`));
       if (!usersSnap.exists()) {
         const base =
@@ -172,7 +164,6 @@ export default function Signup() {
           email: user.email || "",
         });
       } else {
-        // user already has a username; ensure the index exists and user branches are initialized
         const uname = usersSnap.val();
 
         await update(ref(db), {

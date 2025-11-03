@@ -180,7 +180,7 @@ export default function HomePage() {
       const list = [];
       snap.forEach((ch) => {
         const val = ch.val() || {};
-        if (ch.key === "_placeholder") return; // 👈 IGNORER _placeholder
+        if (ch.key === "_placeholder") return;
 
         list.push({
           id: ch.key,

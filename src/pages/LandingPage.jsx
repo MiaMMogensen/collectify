@@ -26,7 +26,6 @@ export default function LandingPage() {
   const prev = () => go(idx - 1);
   const isLast = idx === SLIDES.length - 1;
 
-  /* --- Touch handlers with visual drag --- */
   const onTouchStart = (e) => {
     if (!e.touches?.length) return;
     setDragging(true);
@@ -38,7 +37,7 @@ export default function LandingPage() {
     if (!dragging || !e.touches?.length) return;
     const x = e.touches[0].clientX;
     deltaXRef.current = x - startXRef.current;
-    setIdx((i) => i); // force re-render for transform update
+    setIdx((i) => i);
   };
 
   const onTouchEnd = () => {
@@ -75,7 +74,6 @@ export default function LandingPage() {
           aria-roledescription="carousel"
           aria-label="Collectify intro"
         >
-          {/* 🔹 gradient-frame er fjernet — kun slider-frame beholdes */}
           <div className="slider-frame">
             {SLIDES.map((s, i) => (
               <div

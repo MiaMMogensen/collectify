@@ -199,7 +199,6 @@ export default function CollectionPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // søgning
   const [q, setQ] = useState("");
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef(null);
@@ -318,10 +317,8 @@ export default function CollectionPage() {
     ? `/users/${meUid}/collections/${collectionId}/createcategory`
     : "#";
 
-  // *** NYT: afgør om vi søger ***
   const searchActive = (q || "").trim().length > 0;
 
-  // --- Sektioner (genbrug med samme CSS-klasser) ---
   const CategoriesSection = categories.length > 0 && (
     <>
       <h3 className="aftersignup-subtitle-collection">Categories</h3>
@@ -396,7 +393,7 @@ export default function CollectionPage() {
 
         <Link
           to={`/users/${auth.currentUser?.uid}/collections/${collectionId}/edit`}
-          className="fav-star empty" // bruger eksisterende stil
+          className="fav-star empty"
           aria-label="Edit collection"
           title="Edit collection"
         >
@@ -428,7 +425,6 @@ export default function CollectionPage() {
             {searching && <span>Searching…</span>}
           </div>
 
-          {/* *** DYNAMISK RÆKKEFØLGE *** */}
           {searchActive ? (
             <>
               {AllSection}

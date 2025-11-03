@@ -66,11 +66,11 @@ h3 {
 /* ---------- Bund-Navbar (grid for stabile mellemrum) ---------- */
 .nav-bar {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* 5 lige kolonner */
+  grid-template-columns: repeat(5, 1fr);
   align-items: center;
   justify-items: center;
   gap: 12px;
-  height: 72px; /* lås højde – hopper ikke */
+  height: 72px;
   padding: 12px 8px;
   background: #363636;
   position: fixed;
@@ -79,7 +79,7 @@ h3 {
   max-width: 500px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 30; /* popuppen ligger BAG denne */
+  z-index: 30;
   border-radius: 40px;
 }
 
@@ -94,7 +94,7 @@ h3 {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%; /* stort klik-område */
+  width: 100%;
   text-decoration: none;
   color: #444;
   transition: color 0.2s ease;
@@ -103,27 +103,22 @@ h3 {
 /* Add står i midterste kolonne */
 .nav-link.is-add {
   grid-column: 3;
-  z-index: 33; /* over popuppen når den ligger bag */
-  appearance: none; /* fjern native look (webkit/moz) */
+  z-index: 33;
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background: none; /* ingen baggrund */
-  border: none; /* ingen kant */
-  padding: 0; /* ingen ekstra padding (klik-arealet bestemmes af .icon-wrapper) */
+  background: none;
+  border: none;
+  padding: 0;
   margin: 0;
-  outline: none; /* nat. outline fjernes, vi bruger focus-visible nedenfor */
-  display: inline-flex; /* match layout */
+  outline: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .nav-link.is-add .icon-wrapper {
   background: none;
-}
-
-/* aktiv farve (valgfrit) */
-.nav-link.active {
-  color: #1976d2;
 }
 
 /* ikon-“boblen” */
@@ -146,7 +141,7 @@ h3 {
 }
 
 .nav-link:not(.is-add) .icon-image {
-  filter: brightness(0) invert(1); /* gør svg’er hvide */
+  filter: brightness(0) invert(1);
   transition: filter 0.2s ease;
 }
 
@@ -159,7 +154,7 @@ h3 {
   transform: scale(1.6);
 }
 
-/* valgfrit aktiv-baggrund */
+/* aktiv-baggrund */
 .nav-link.active .icon-wrapper {
   background: #ffffff;
 }
@@ -170,34 +165,28 @@ h3 {
 .add-backdrop {
   position: fixed;
   inset: 0;
-  background: transparent; /* usynlig – kun klikfang */
+  background: transparent;
   border: 0;
   padding: 0;
   margin: 0;
-  z-index: 20; /* under popup og nav */
+  z-index: 20;
 }
 
-/*
- * GRADIENT-POPUP:
- * - Ligger BAG navbaren (z-index: 29 < nav 30)
- * - Starter HALVVEJS under navbaren (overlap 36px, da nav er 72px høj)
- *   -> bottom = nav bottom (30px) + 36px
- */
 .add-popup {
   position: fixed;
   left: 50%;
-  bottom: 45px; /* halv overlap under nav */
+  bottom: 45px;
   transform: translateX(-50%);
   width: calc(100% - 40px);
   max-width: 500px;
   border-radius: 30px;
   background: linear-gradient(180deg, #ff86b4 0%, #e99aff 100%);
-  padding: 32px 10px; /* ingen indre “cards” */
+  padding: 32px 10px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;
-  z-index: 29; /* BAG navbaren */
+  z-index: 29;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   animation: addPopIn 160ms ease-out both;
@@ -218,7 +207,7 @@ h3 {
   color: #ffffff;
   background: none;
   border: none;
-  box-shadow: none; /* <- fjern “kort”-look */
+  box-shadow: none;
   padding: 12px 8px;
   cursor: pointer;
   text-align: center;
@@ -230,10 +219,9 @@ h3 {
 
 .add-choice,
 .add-divider {
-  transform: translateY(-28px); /* løft elementerne lidt */
+  transform: translateY(-28px);
 }
 
-/* lille pop-in for lækkerhed */
 @keyframes addPopIn {
   from {
     opacity: 0;
@@ -245,13 +233,12 @@ h3 {
   }
 }
 
-/* Gradient-rammen (genbruger din gradient) */
 .gradient-frame {
   display: inline-block;
-  padding: 4px; /* gradient “border” thickness */
+  padding: 4px;
   border-radius: 33px;
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
-  width: 90%; /* center + cap max width */
+  width: 90%;
 }
 
 /* ========================================================================== */
@@ -275,11 +262,10 @@ h3 {
   text-align: center;
 }
 
-/* Knapper (uændret) */
 .landing-page-btns {
   display: flex;
   justify-content: center;
-  gap: 18px; /* afstand mellem knapperne */
+  gap: 18px;
   margin-top: 20px;
 }
 
@@ -301,16 +287,16 @@ h3 {
   padding: 1px 1px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  border: 1px solid transparent; /* for at undgå forskydning ved hover */
+  border: 1px solid transparent;
   background-image: linear-gradient(var(--black), var(--black)),
-    /* indre baggrund */ linear-gradient(to right, #ff86b4, #e99aff); /* kantens gradient */
+    linear-gradient(to right, #ff86b4, #e99aff);
   background-origin: border-box;
   background-clip: content-box, border-box;
   transition: transform 0.2s ease;
 }
 
 .get-started-btn {
-  gap: 2px; /* afstand mellem tekst og ikon */
+  gap: 2px;
   background: linear-gradient(180deg, #ff86b4 0%, #e99aff 100%);
   border: none;
   border-radius: 12px;
@@ -322,11 +308,10 @@ h3 {
 .arrow-icon {
   width: 20px;
   height: 20px;
-  filter: brightness(0) invert(1); /* sikrer at pilen forbliver hvid, selv hvis SVG'en er sort */
+  filter: brightness(0) invert(1);
   transition: transform 0.2s ease;
 }
 
-/* Wrapper: centrer og tillad lodret scroll (vi håndterer swipe selv) */
 .landing-page-slider {
   position: relative;
   margin-inline: auto;
@@ -334,7 +319,6 @@ h3 {
   touch-action: pan-y;
 }
 
-/* Området inden i gradienten der holder billederne */
 .slider-frame {
   position: relative;
   overflow: hidden;
@@ -347,18 +331,16 @@ h3 {
   border: 3px solid transparent;
 }
 
-/* Hvert slide fylder hele boksen og kan flyttes vandret ved swipe */
 .slide {
   position: absolute;
-  inset: 0; /* udfylder hele slider-frame */
+  inset: 0;
   border-radius: 30px;
   display: flex;
   place-items: center;
   will-change: transform;
-  transition: transform 350ms ease; /* smooth snap når man slipper */
+  transition: transform 350ms ease;
 }
 
-/* Når vi er i drag: fjern transition så billedet følger fingeren 1:1 */
 .landing-page-slider.dragging .slide {
   transition: none !important;
 }
@@ -371,12 +353,10 @@ h3 {
   display: block;
 }
 
-/* Skjul evt. gamle pile hvis de findes */
 .slider-nav {
   display: none !important;
 }
 
-/* Dots under slideren (neutral stil) */
 .slider-dots {
   display: flex;
   gap: 8px;
@@ -396,7 +376,6 @@ h3 {
   background: #fff;
 }
 
-/* CTA kun synlig på sidste slide (styres via .show i JSX) */
 .landing-page-btns-slider {
   opacity: 0;
   transform: translateY(6px);
@@ -404,7 +383,7 @@ h3 {
   transition: opacity 300ms ease, transform 300ms ease;
   display: flex;
   justify-content: center;
-  gap: 18px; /* afstand mellem knapperne */
+  gap: 18px;
   margin-top: 20px;
 }
 
@@ -412,13 +391,6 @@ h3 {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-}
-
-/* (valgfri) små mobile tweaks */
-@media (max-width: 768px) {
-  .slider-frame {
-    min-height: 260px;
-  }
 }
 
 /* ========================================================================== */
@@ -682,8 +654,8 @@ h3 {
   width: 60px;
   height: 30px;
   font-size: 14px;
-  display: flex; /* Gør knappen til et flex-container */
-  align-items: center; /* Centrerer vertikalt */
+  display: flex;
+  align-items: center;
   justify-content: center;
   background: linear-gradient(#353535, #353535) padding-box,
     linear-gradient(180deg, #ff86b4 0%, #e99aff 100%) border-box;
@@ -698,7 +670,7 @@ h3 {
 
 .add-item-page .filter-buttons {
   display: flex;
-  flex-wrap: wrap; /* så de hopper ned på ny linje, hvis der ikke er plads */
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -747,9 +719,9 @@ h3 {
   font-size: 14px;
   width: 60px;
   height: 36px;
-  display: flex; /* <-- tilføj */
-  align-items: center; /* <-- lodret centreret */
-  justify-content: center; /* <-- horisontalt centreret */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
@@ -822,7 +794,6 @@ h3 {
   padding: 12px 0;
 }
 
-/* Liste */
 .pending-list {
   list-style: none;
   padding: 0;
@@ -831,7 +802,6 @@ h3 {
   gap: 15px;
 }
 
-/* Item */
 .pending-item {
   padding: 12px;
   border-radius: 12px;
@@ -946,7 +916,6 @@ h3 {
 /* ========== HORIZONTAL SCROLL STRIPS (Discover/Collections) ============== */
 /* ========================================================================== */
 
-/* --- Horizontal strip i stedet for grid --- */
 .hscroll-strip {
   display: flex;
   gap: 16px;
@@ -957,7 +926,6 @@ h3 {
   -webkit-overflow-scrolling: touch;
 }
 
-/* skjul scrollbar, men bevar scroll */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -965,7 +933,6 @@ h3 {
   scrollbar-width: none;
 }
 
-/* kortbredde – så de lægger sig som “cards” på række */
 .hscroll-strip .collection-card {
   flex: 0 0 auto;
   width: 120px;
@@ -976,20 +943,18 @@ h3 {
 }
 
 .hscroll-strip .cover-frame {
-  padding: 2px; /* tykkelsen på “kanten” */
+  padding: 2px;
   border-radius: 18px;
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
 }
 
-/* Inner: styrer format og clipping */
 .hscroll-strip .cover-wrap {
-  aspect-ratio: 3 / 4; /* bog/album-format */
-  border-radius: 16px; /* 2px mindre end frame */
-  overflow: hidden; /* croppper billedet */
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  overflow: hidden;
   background: #2a2a2a;
 }
 
-/* Billedet: som block for at fjerne baseline-gap */
 .hscroll-strip .cover {
   display: block;
   width: 100%;
@@ -998,7 +963,6 @@ h3 {
   border-radius: 16px;
 }
 
-/* titel/artist under cover */
 .hscroll-strip .item-title {
   margin: 8px 2px 2px;
   font-size: 14px;
@@ -1030,28 +994,26 @@ h3 {
 
 .categories-strip .cover-frame {
   display: block;
-  padding: 2px; /* tykkelsen på rammen */
+  padding: 2px;
   border-radius: 30px;
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
-  overflow: hidden; /* sørger for afrunding */
-  text-decoration: none; /* fjern link-underline */
+  overflow: hidden;
+  text-decoration: none;
   width: 92%;
   margin-left: 15px;
   margin-bottom: 15px;
   margin-top: 10px;
 }
 
-/* indre kort, der ligger ovenpå gradientrammen */
 .category-card {
   position: relative;
   width: 100%;
   height: 120px;
-  border-radius: 28px; /* 2px mindre end frame */
+  border-radius: 28px;
   overflow: hidden;
-  background: #1a1a1a; /* fallback bag billedet */
+  background: #1a1a1a;
 }
 
-/* billedet */
 .category-cover {
   position: absolute;
   inset: 0;
@@ -1062,7 +1024,6 @@ h3 {
   display: block;
 }
 
-/* titel */
 .category-title {
   position: absolute;
   left: 10px;
@@ -1076,7 +1037,6 @@ h3 {
   font-size: 16px;
 }
 
-/* Titel + sideoverskrift skal have stort forbogstav */
 .category-title,
 .page-title {
   text-transform: capitalize;
@@ -1134,13 +1094,11 @@ h3 {
   margin: 0;
 }
 
-/* Tekstfarve */
 .add-to-cat .collection-card.selectable .item-title,
 .add-to-cat .collection-card.selectable .item-sub {
   color: var(--txt);
 }
 
-/* Match coverrammen */
 .category-grid .collection-card .cover-frame,
 .add-to-cat .collection-card .cover-frame {
   padding: 2px;
@@ -1149,10 +1107,9 @@ h3 {
 }
 
 .add-to-cat .collection-card .cover-frame {
-  background: transparent; /* ingen gradient som default */
+  background: transparent;
 }
 
-/* Ens coverhøjde (kvadratisk format) */
 .category-grid .cover-wrap,
 .add-to-cat .collection-card .cover-wrap {
   position: relative;
@@ -1169,7 +1126,6 @@ h3 {
   display: block;
 }
 
-/* Typografi */
 .category-grid .item-title,
 .add-to-cat .collection-card .item-title {
   margin: 8px 4px 0;
@@ -1185,7 +1141,6 @@ h3 {
   opacity: 0.8;
 }
 
-/* Når valgt: gradientkant + let glow */
 .add-to-cat .collection-card.is-selected .cover-frame,
 .add-to-cat .cover-frame.selected {
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
@@ -1195,7 +1150,6 @@ h3 {
   transition: transform 0.15s ease;
 }
 
-/* ---------- Disabled items (allerede i category) ---------- */
 .add-to-cat .collection-card.is-disabled {
   opacity: 0.4;
   pointer-events: none;
@@ -1215,8 +1169,6 @@ h3 {
 /* ========== ITEM DETAIL PAGE ============================================= */
 /* ========================================================================== */
 
-/* ItemDetail.css - ekstern stylesheet */
-
 .item-page {
   max-width: 1000px;
   color: var(--white);
@@ -1235,9 +1187,9 @@ h3 {
   height: 247px;
   object-fit: cover;
   flex-shrink: 0;
-  border-radius: 12px; /* yderste radius */
+  border-radius: 12px;
   background: linear-gradient(to bottom, #ff86b4, #e99aff);
-  padding: 2px; /* tykkelsen på “kanten” */
+  padding: 2px;
 }
 
 .item-page .item-cover.placeholder {
@@ -1329,7 +1281,6 @@ h3 {
   margin-top: 18px;
 }
 
-/* Stjerne/favorites */
 .title-row,
 .author-row {
   display: flex;
@@ -1337,7 +1288,6 @@ h3 {
   gap: 10px;
 }
 
-/* knap for stjerne */
 .fav-star {
   border: none;
   background: transparent;
@@ -1359,17 +1309,11 @@ h3 {
   margin-top: 30px;
 }
 
-/* default (ikke favorit) — lidt afdæmpet */
-
-/* fyldt favorit — fremhæv */
 .fav-star.filled img {
   filter: none;
-  /* hvis du vil farve stjernen: */
-  /* transform svg via CSS fill hvis svgen bruger currentColor */
   transform: scale(1.03);
 }
 
-/* hvis du vil sørge for stjernen ikke skubber layoutet for meget */
 .fav-star img {
   width: 22px;
   height: 22px;
@@ -1411,31 +1355,28 @@ h3 {
   filter: brightness(0) invert(1);
 }
 
-/* Gør tag-listen flerrækket og stabil */
 .item-tags.item-tags-wrap {
   display: flex;
-  flex-wrap: wrap; /* -> flere rækker */
-  gap: 8px 10px; /* lodret og vandret afstand */
-  align-items: flex-start; /* undgå strækning i højden */
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: flex-start;
   padding: 0;
-  margin: 15px 12px 6px 12px; /* lidt luft på siderne */
+  margin: 15px 12px 6px 12px;
   list-style: none;
 }
 
-/* Hvert tag må ikke krympe, og teksten skal ikke brydes */
 .item-tags.item-tags-wrap .tag {
-  white-space: nowrap; /* stå på én linje */
-  flex: 0 0 auto; /* ingen shrinking */
-  min-width: 0; /* undgå uventet overflow-limits i flex */
+  white-space: nowrap;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .collection-card.is-missing {
   opacity: 0.45;
   filter: grayscale(80%);
-  pointer-events: auto; /* stadig klikbar */
+  pointer-events: auto;
 }
 
-/* lille badge for missing */
 .collection-card .missing-badge {
   font-size: 12px;
   color: #fff;

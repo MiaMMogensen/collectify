@@ -21,11 +21,9 @@ export default function AllCollectionsPage() {
       r,
       (snap) => {
         const val = snap.val() || {};
-        // objekt -> array, filtrér placeholder/tekniske nøgler
         const list = Object.keys(val)
           .filter((k) => !k.startsWith("_"))
           .map((k) => ({ id: k, ...val[k] }))
-          // sortér nyeste opdateret først (falder tilbage til createdAt)
           .sort(
             (a, b) =>
               (b.updatedAt || b.createdAt || 0) -

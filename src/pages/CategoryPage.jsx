@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { auth, db } from "../../firebase-config";
-import { ref, child, get } from "firebase/database"; // <-- tilføjet update
+import { ref, child, get } from "firebase/database";
 import Nav from "../components/Nav";
 import backArrow from "../assets/icons/backarrow.svg";
 import settingsIcon from "../assets/icons/edit.svg";
 
-/* ---------- helpers (samme stil som CollectionPage) ---------- */
+/* ---------- helpers ---------- */
 function normType(t) {
   const x = (t || "").toLowerCase();
   if (x === "books") return "book";
@@ -47,7 +47,6 @@ function pickImage(val) {
   return u.trim().replace(/^["']|["']$/g, "");
 }
 
-/* ---------- matcher også maps til multi-kategori ---------- */
 function itemMatchesCategory(item, categoryId, categoryTitle) {
   const id = String(categoryId || "").trim();
   const title = String(categoryTitle || "")
@@ -395,7 +394,6 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* ---------- CTA buttons (samme CSS som CollectionPage) ---------- */}
       <div className="landing-page-btns" style={{ marginTop: 20 }}>
         <Link
           to={`/users/${
